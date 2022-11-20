@@ -43,7 +43,9 @@ def guess_result_test(previous_guess, answer):
     return result
 
 # TODO: update letter banks based on values of previous iteration. may need to assign priority to 0 values here?
-
+def update_letter_banks(banks, previous_guess, values):
+    for i in range(len(values)):
+        
 
 # TODO: update word pool based on updated letter banks for each slot. order should not matter.
 
