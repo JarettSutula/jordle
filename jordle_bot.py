@@ -4,6 +4,7 @@
 # eventually, future versions should make more educated guesses and maybe even work directly from wordle's
 # website and no longer require manual intervention. not sure if feasible yet.
 import string
+import re
 
 lowercase_letters = list(string.ascii_lowercase)
 # test values
@@ -12,6 +13,7 @@ answer = "baker"
 previous_guess = starting_guess
 answer_contains = []
 
+bank_debug = True
 
 # TODO: create letter banks for each slot (1-5) of alphabets. These will be updated for each iteration of guesses.
 letter_banks = [lowercase_letters] * 5
@@ -48,8 +50,14 @@ def update_letter_banks(banks, previous_guess, values):
     # go through every matching letters and update banks.
     for i in range(len(values)):
         if values[i] == 2:
+            if bank_debug:
+                print(f"before correct char in slot {i}:")
+                debug_banks(i)
             letter_banks[i] = [previous_guess[i]]
             answer_contains.append(previous_guess[i])
+            if bank_debug:
+                print(f"after correct char in slot {i}:")
+                debug_banks(i)
             
     # if it's a 1, remove letter from current slot bank.
     for i in range(len(values)):
@@ -57,7 +65,10 @@ def update_letter_banks(banks, previous_guess, values):
             letter_banks[i].remove(previous_guess[i])
             if previous_guess[i] not in answer_contains:
                 answer_contains.append(previous_guess[i])
-    
+            if bank_debug: 
+                print(f"removing letter '{previous_guess[i]}' from bank {i}")
+                debug_banks(i)
+
     # if it's a 0, remove letter from all letter banks...
     # unless the letter exists somewhere else in the guess and that value is a 2.
     for i in range(len(values)):
@@ -67,19 +78,27 @@ def update_letter_banks(banks, previous_guess, values):
                 for bank in letter_banks:
                     if previous_guess[i] in bank:
                         bank.remove(previous_guess[i])
-                        print("removed" + str(previous_guess[i]) + "from letter bank" + str(i))
+                        print("removed " + str(previous_guess[i]) + " from letter bank" + str(i))
+                        debug_banks(bank)
+                if bank_debug: 
+                    print(f"removing letter '{previous_guess[i]}' from all banks")
+                    debug_banks(-1)
+            else:
+                #TODO need to figure out which bank has the value of 2 and remove from banks OTHER than that one.
 
 
 # TODO: update word pool based on updated letter banks for each slot. order should not matter.
 
-def debug_banks():
-    for bank in letter_banks:
-        print(bank)
+def debug_banks(bank):
+    if bank == -1:
+        for bank in letter_banks:
+            print(bank)
+    elif 0 <= bank <= 4:
+        print(f'bank slot {bank}: {letter_banks[bank]}')
+    else:
+        print("something is wrong, invalid input for debug_banks")
 
 # general cycle of input/output from wordl so far.
 results = guess_result_test(previous_guess, answer)
 print(results)
-debug_banks()
 update_letter_banks(letter_banks, previous_guess, results)
-debug_banks()
-
