@@ -14,10 +14,15 @@ previous_guess = starting_guess
 answer_contains = []
 
 bank_debug = True
+guess_debug = True
 
-# TODO: create letter banks for each slot (1-5) of alphabets. These will be updated for each iteration of guesses.
-letter_banks = [lowercase_letters] * 5
-# print(letter_banks)
+# letter banks will keep track of chars viable for each slot in the wordle. 1 for each slot.
+letter_banks = []
+for i in range(5): letter_banks.append(lowercase_letters)
+
+if guess_debug:
+    print(f'starting guess is {starting_guess}')
+    print(f'wordle answer is {answer}')
 
 # TODO: assign values to letters based on their guesses from previous iteration. 
 # (ex: 0 = does not appear at all, 1 = appears but not in this slot, 2 = in correct slot)
@@ -48,6 +53,9 @@ def guess_result_test(previous_guess, answer):
 # TODO: update letter banks based on values of previous iteration. may need to assign priority here.
 def update_letter_banks(banks, previous_guess, values):
     # go through every matching letters and update banks.
+    if bank_debug:
+        two_count = values.count(2)
+        print(f'\nGoing through correct values: should be {two_count}.')
     for i in range(len(values)):
         if values[i] == 2:
             if bank_debug:
@@ -58,7 +66,10 @@ def update_letter_banks(banks, previous_guess, values):
             if bank_debug:
                 print(f"after correct char in slot {i}:")
                 debug_banks(i)
-            
+    
+    if bank_debug:
+        one_count = values.count(1)
+        print(f'\nGoing through correct but misplaced values: should be {one_count}.')
     # if it's a 1, remove letter from current slot bank.
     for i in range(len(values)):
         if values[i] == 1:
@@ -71,21 +82,36 @@ def update_letter_banks(banks, previous_guess, values):
 
     # if it's a 0, remove letter from all letter banks...
     # unless the letter exists somewhere else in the guess and that value is a 2.
+    if bank_debug:
+        zero_count = values.count(0)
+        print(f'\nGoing through incorrect values: should be {zero_count}.')
     for i in range(len(values)):
         if values[i] == 0:
+            # regardless of whether or not this is the only instance of this letter, it should be removed from its bank.
+            # if previous_guess[i] in letter_banks[i]:
+            #     letter_banks[i].remove(previous_guess[i])
+
             # if this is the only count of this char in the guess, remove from all banks.
             if previous_guess.count(previous_guess[i]) == 1:
                 for bank in letter_banks:
                     if previous_guess[i] in bank:
                         bank.remove(previous_guess[i])
                         print("removed " + str(previous_guess[i]) + " from letter bank" + str(i))
-                        debug_banks(bank)
+                        debug_banks(i)
                 if bank_debug: 
                     print(f"removing letter '{previous_guess[i]}' from all banks")
                     debug_banks(-1)
             else:
-                #TODO need to figure out which bank has the value of 2 and remove from banks OTHER than that one.
-
+                # we have more than 1 instance of that letter in the guess. Go through each slot and check and remove.
+                for j in range(len(values)):
+                    # if we have an instance where we have a reoccuring letter in the guess..
+                    if previous_guess[j] == previous_guess[i]:
+                        # if it isn't a correct value (2), remove it from that specific letter bank.
+                        if values[j] != 2 and previous_guess[j] in letter_banks[j]:
+                            letter_banks[j].remove(previous_guess[j])
+                            if bank_debug:
+                                print(f'removing {previous_guess[i]} from letter bank {j} code=003')
+                                debug_banks(j)
 
 # TODO: update word pool based on updated letter banks for each slot. order should not matter.
 
