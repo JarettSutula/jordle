@@ -6,9 +6,8 @@
 import string
 import re
 
-lowercase_letters = list(string.ascii_lowercase)
 # test values
-starting_guess = "seeps"
+starting_guess = "bread"
 answer = "baker"
 previous_guess = starting_guess
 answer_contains = []
@@ -18,7 +17,7 @@ guess_debug = True
 
 # letter banks will keep track of chars viable for each slot in the wordle. 1 for each slot.
 letter_banks = []
-for i in range(5): letter_banks.append(lowercase_letters)
+for i in range(5): letter_banks.append(list(string.ascii_lowercase))
 
 if guess_debug:
     print(f'starting guess is {starting_guess}')
@@ -65,7 +64,7 @@ def update_letter_banks(banks, previous_guess, values):
             answer_contains.append(previous_guess[i])
             if bank_debug:
                 print(f"after correct char in slot {i}:")
-                debug_banks(i)
+                debug_banks(-1)
     
     if bank_debug:
         one_count = values.count(1)
@@ -124,7 +123,12 @@ def debug_banks(bank):
     else:
         print("something is wrong, invalid input for debug_banks")
 
-# general cycle of input/output from wordl so far.
-results = guess_result_test(previous_guess, answer)
-print(results)
-update_letter_banks(letter_banks, previous_guess, results)
+# general cycle of input/output from wordle so far.
+# results = guess_result_test(previous_guess, answer)
+# print(results)
+# update_letter_banks(letter_banks, previous_guess, results)
+print("before:")
+debug_banks(-1)
+print("removing 'b' from slot 1.")
+letter_banks[1].remove('b')
+debug_banks(-1)
