@@ -7,7 +7,7 @@ import string
 import re
 
 # test values
-starting_guess = "bread"
+starting_guess = "seeps"
 answer = "baker"
 previous_guess = starting_guess
 answer_contains = []
@@ -92,11 +92,11 @@ def update_letter_banks(banks, previous_guess, values):
 
             # if this is the only count of this char in the guess, remove from all banks.
             if previous_guess.count(previous_guess[i]) == 1:
-                for bank in letter_banks:
-                    if previous_guess[i] in bank:
-                        bank.remove(previous_guess[i])
-                        print("removed " + str(previous_guess[i]) + " from letter bank" + str(i))
-                        debug_banks(i)
+                for j in range(len(values)):
+                    if previous_guess[i] in letter_banks[j]:
+                        letter_banks[j].remove(previous_guess[i])
+                        print(f'removed {previous_guess[i]} from letter bank {j}')
+                        debug_banks(j)
                 if bank_debug: 
                     print(f"removing letter '{previous_guess[i]}' from all banks")
                     debug_banks(-1)
@@ -124,11 +124,6 @@ def debug_banks(bank):
         print("something is wrong, invalid input for debug_banks")
 
 # general cycle of input/output from wordle so far.
-# results = guess_result_test(previous_guess, answer)
-# print(results)
-# update_letter_banks(letter_banks, previous_guess, results)
-print("before:")
-debug_banks(-1)
-print("removing 'b' from slot 1.")
-letter_banks[1].remove('b')
-debug_banks(-1)
+results = guess_result_test(previous_guess, answer)
+print(results)
+update_letter_banks(letter_banks, previous_guess, results)
