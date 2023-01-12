@@ -15,7 +15,7 @@ for word in words:
 dict_file.close()
 
 # now that we have the new words, fill them into the new file.
-new_file = open('5_letter_dict', 'w')
+new_file = open('5_letter_dict.txt', 'w')
 for word in new_words:
     new_file.write(word)
     new_file.write('\n')

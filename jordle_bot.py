@@ -12,8 +12,11 @@ answer = "baker"
 previous_guess = starting_guess
 answer_contains = []
 
+answer_pool = []
+
 bank_debug = True
 guess_debug = True
+answer_debug = True
 
 # letter banks will keep track of chars viable for each slot in the wordle. 1 for each slot.
 letter_banks = []
@@ -113,6 +116,23 @@ def update_letter_banks(banks, previous_guess, values):
                                 debug_banks(j)
 
 # TODO: update word pool based on updated letter banks for each slot. order should not matter.
+def update_answer_pool():
+    pass
+
+def fill_answer_pool(answer_list):
+    pool_file = open('5_letter_dict.txt', 'r')
+    answers = pool_file.readlines()
+    count = 0
+
+    for answer in answers:
+        answer_list.append(answer.strip())
+        count += 1
+    
+    pool_file.close()
+    
+    if answer_debug:
+        print(f'added {count} words to answer pool.')
+        print(f'first word is {answer_list[1]} and last word is {answer_list[-1]}')
 
 def debug_banks(bank):
     if bank == -1:
@@ -124,6 +144,8 @@ def debug_banks(bank):
         print("something is wrong, invalid input for debug_banks")
 
 # general cycle of input/output from wordle so far.
+fill_answer_pool(answer_pool)
+
 results = guess_result_test(previous_guess, answer)
 print(results)
 update_letter_banks(letter_banks, previous_guess, results)
