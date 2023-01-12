@@ -7,8 +7,8 @@ import string
 import re
 
 # test values
-starting_guess = "seeps"
-answer = "baker"
+starting_guess = "SEEPS"
+answer = "BAKER"
 previous_guess = starting_guess
 answer_contains = []
 
@@ -20,7 +20,7 @@ answer_debug = True
 
 # letter banks will keep track of chars viable for each slot in the wordle. 1 for each slot.
 letter_banks = []
-for i in range(5): letter_banks.append(list(string.ascii_lowercase))
+for i in range(5): letter_banks.append(list(string.ascii_uppercase))
 
 if guess_debug:
     print(f'starting guess is {starting_guess}')
@@ -101,7 +101,7 @@ def update_letter_banks(banks, previous_guess, values):
                         print(f'removed {previous_guess[i]} from letter bank {j}')
                         debug_banks(j)
                 if bank_debug: 
-                    print(f"removing letter '{previous_guess[i]}' from all banks")
+                    print(f"removed letter '{previous_guess[i]}' from all banks")
                     debug_banks(-1)
             else:
                 # we have more than 1 instance of that letter in the guess. Go through each slot and check and remove.
@@ -117,7 +117,27 @@ def update_letter_banks(banks, previous_guess, values):
 
 # TODO: update word pool based on updated letter banks for each slot. order should not matter.
 def update_answer_pool():
-    pass
+    regex = generate_regex_string()
+    count_before = len(answer_pool)
+
+    for answer in answer_pool:
+        if not re.match(regex, answer):
+            answer_pool.remove(answer)
+
+    if answer_debug:
+        print(f'before: {count_before} words\nafter: {len(answer_pool)}')
+    
+def generate_regex_string():
+    strings = []
+    for bank in letter_banks:
+        result = "["
+        for letter in bank:
+            result += letter
+        result += "]"
+        strings.append(result)
+
+    regex = "".join(strings)
+    print(regex)
 
 def fill_answer_pool(answer_list):
     pool_file = open('5_letter_dict.txt', 'r')
@@ -148,4 +168,6 @@ fill_answer_pool(answer_pool)
 
 results = guess_result_test(previous_guess, answer)
 print(results)
+generate_regex_string()
 update_letter_banks(letter_banks, previous_guess, results)
+generate_regex_string()
