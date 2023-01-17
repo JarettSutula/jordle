@@ -125,7 +125,7 @@ def update_answer_pool():
             answer_pool.remove(answer)
 
     if answer_debug:
-        print(f'before: {count_before} words\nafter: {len(answer_pool)}')
+        print(f'before: {count_before} words\nafter: {len(answer_pool)} words')
     
 def generate_regex_string():
     strings = []
@@ -137,7 +137,7 @@ def generate_regex_string():
         strings.append(result)
 
     regex = "".join(strings)
-    print(regex)
+    return regex
 
 def fill_answer_pool(answer_list):
     pool_file = open('5_letter_dict.txt', 'r')
@@ -170,4 +170,4 @@ results = guess_result_test(previous_guess, answer)
 print(results)
 generate_regex_string()
 update_letter_banks(letter_banks, previous_guess, results)
-generate_regex_string()
+update_answer_pool()
