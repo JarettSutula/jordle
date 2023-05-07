@@ -5,26 +5,28 @@
 # website and no longer require manual intervention. not sure if feasible yet.
 import string
 import re
+import random
 
 # test values
-starting_guess = "SEEPS"
-answer = "BAKER"
-previous_guess = starting_guess
+answer = ""
 answer_contains = []
 
 answer_pool = []
+validity_pool = []
 
-bank_debug = True
-guess_debug = True
-answer_debug = True
+bank_debug = False
+guess_debug = False
+answer_debug = False
+regex_debug = False
+pool_snapshot = False
 
 # letter banks will keep track of chars viable for each slot in the wordle. 1 for each slot.
 letter_banks = []
 for i in range(5): letter_banks.append(list(string.ascii_uppercase))
 
 if guess_debug:
-    print(f'starting guess is {starting_guess}')
     print(f'wordle answer is {answer}')
+
 
 # TODO: assign values to letters based on their guesses from previous iteration. 
 # (ex: 0 = does not appear at all, 1 = appears but not in this slot, 2 = in correct slot)
@@ -52,6 +54,7 @@ def guess_result_test(previous_guess, answer):
 
     return result
 
+
 # TODO: update letter banks based on values of previous iteration. may need to assign priority here.
 def update_letter_banks(banks, previous_guess, values):
     # go through every matching letters and update banks.
@@ -75,7 +78,11 @@ def update_letter_banks(banks, previous_guess, values):
     # if it's a 1, remove letter from current slot bank.
     for i in range(len(values)):
         if values[i] == 1:
-            letter_banks[i].remove(previous_guess[i])
+            if previous_guess[i] in letter_banks[i]:
+                letter_banks[i].remove(previous_guess[i])
+            else:
+                print(f'cannot remove {previous_guess[i]} from letter bank {i}')
+
             if previous_guess[i] not in answer_contains:
                 answer_contains.append(previous_guess[i])
             if bank_debug: 
@@ -98,8 +105,9 @@ def update_letter_banks(banks, previous_guess, values):
                 for j in range(len(values)):
                     if previous_guess[i] in letter_banks[j]:
                         letter_banks[j].remove(previous_guess[i])
-                        print(f'removed {previous_guess[i]} from letter bank {j}')
-                        debug_banks(j)
+                        if bank_debug:
+                            print(f'removed {previous_guess[i]} from letter bank {j}')
+                            debug_banks(j)
                 if bank_debug: 
                     print(f"removed letter '{previous_guess[i]}' from all banks")
                     debug_banks(-1)
@@ -115,29 +123,43 @@ def update_letter_banks(banks, previous_guess, values):
                                 print(f'removing {previous_guess[i]} from letter bank {j} code=003')
                                 debug_banks(j)
 
+
 # TODO: update word pool based on updated letter banks for each slot. order should not matter.
-def update_answer_pool():
+def update_answer_pool(answer_pool):
     regex = generate_regex_string()
     count_before = len(answer_pool)
 
-    for answer in answer_pool:
-        if not re.match(regex, answer):
-            answer_pool.remove(answer)
+    r = re.compile(regex)
+    # filter out all options that don't match regex pattern.
+    updated_list = list(filter(r.match, answer_pool))
+    answer_pool = updated_list
 
     if answer_debug:
         print(f'before: {count_before} words\nafter: {len(answer_pool)} words')
+
+    if pool_snapshot:
+        print(answer_pool[:9])
     
+
 def generate_regex_string():
     strings = []
     for bank in letter_banks:
-        result = "["
-        for letter in bank:
-            result += letter
-        result += "]"
-        strings.append(result)
-
+        # Don't need brackets for single letters.
+        if len(bank) == 1:
+            strings.append(bank[0])
+        else:
+            result = "["
+            for letter in bank:
+                result += letter
+            result += "]"
+            strings.append(result)
+    
     regex = "".join(strings)
+    if regex_debug:
+        print(f'combined strings: {strings}')
+        print(f'regex string: {regex}')
     return regex
+
 
 def fill_answer_pool(answer_list):
     pool_file = open('5_letter_dict.txt', 'r')
@@ -154,6 +176,7 @@ def fill_answer_pool(answer_list):
         print(f'added {count} words to answer pool.')
         print(f'first word is {answer_list[1]} and last word is {answer_list[-1]}')
 
+
 def debug_banks(bank):
     if bank == -1:
         for bank in letter_banks:
@@ -163,11 +186,41 @@ def debug_banks(bank):
     else:
         print("something is wrong, invalid input for debug_banks")
 
-# general cycle of input/output from wordle so far.
-fill_answer_pool(answer_pool)
 
-results = guess_result_test(previous_guess, answer)
-print(results)
-generate_regex_string()
-update_letter_banks(letter_banks, previous_guess, results)
-update_answer_pool()
+def wordle_loop():
+    # general cycle of input/output from wordle so far.
+    fill_answer_pool(answer_pool)
+    fill_answer_pool(validity_pool)
+    answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
+    guessing = True
+    guesses = 0
+    result = False
+    while guessing and guesses < 6:
+        guess = input(f"guess {guesses + 1}: ").upper()
+        # check if guess is valid - 3 options.
+        # 1. must only contain letters.
+        # 2. must only be 5 letters long.
+        # 3. must be in the bank (should override all)
+        if guess not in validity_pool:
+            print("guess is invalid - please ensure guess is a valid 5 letter word.")
+            
+        else:
+            guesses += 1
+            
+            if guess == answer:
+                guessing = False
+                result = True
+        
+            else:
+                results = guess_result_test(guess, answer)
+                print(results)
+                generate_regex_string()
+                update_letter_banks(letter_banks, guess, results)
+                update_answer_pool(answer_pool)
+    
+    if result:
+        print(f'{answer} guessed in {guesses} attempts.')
+    else:
+        print(f'{answer} not guessed in {guesses} attempts.')
+
+wordle_loop()
