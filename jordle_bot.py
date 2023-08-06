@@ -13,6 +13,7 @@ answer_contains = []
 
 answer_pool = []
 validity_pool = []
+guessed_letters = []
 
 bank_debug = False
 guess_debug = False
@@ -141,6 +142,16 @@ def update_answer_pool(answer_pool):
         print(answer_pool[:9])
     
 
+def update_guessed_letters(guess, guessed_letters):
+    # given a guess, keep track of which letters have been guessed. vital to
+    # information theory approach.
+    print(guess, guessed_letters)
+    for i in range(len(guess)):
+        if guess[i] not in guessed_letters:
+            guessed_letters += guess[i]
+    print(guess, guessed_letters)
+
+
 def generate_regex_string():
     strings = []
     for bank in letter_banks:
@@ -187,6 +198,20 @@ def debug_banks(bank):
         print("something is wrong, invalid input for debug_banks")
 
 
+def information_theory_approach():
+    # TODO: Need to find the word with the highest amount of unguessed letters.
+    # general information theory says this is the fastest way to narrow the
+    # validity pool to a single answer, I think.
+
+    # separate words into groups of unguessed letters. use index.
+    fives = 0
+    fours = 1
+    threes = 2
+    twos = 3
+    ones = 4
+    zeroes = 5
+
+
 def wordle_loop():
     # general cycle of input/output from wordle so far.
     fill_answer_pool(answer_pool)
@@ -217,6 +242,7 @@ def wordle_loop():
                 generate_regex_string()
                 update_letter_banks(letter_banks, guess, results)
                 update_answer_pool(answer_pool)
+                update_guessed_letters(guess, guessed_letters)
     
     if result:
         print(f'{answer} guessed in {guesses} attempts.')
