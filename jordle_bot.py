@@ -25,7 +25,7 @@ guess_debug = False
 answer_debug = True
 regex_debug = False
 pool_snapshot = True
-information_theory_debug = False
+information_theory_debug = True
 
 # letter banks will keep track of chars viable for each slot in the wordle. 1 for each slot.
 letter_banks = []
@@ -156,18 +156,22 @@ def update_answer_pool():
     # instead we will just remove any words from updated_list that do not contain
     # the letters from 'answer_contains'. Testing ensues. 
     check_b4 = len(updated_list)
+    # separate list to ensure the loop does not get thrown by mid-iteration removal.
+    updated_list_copy = updated_list[:]
     for guess in updated_list:
         remove = False
         for letter in answer_contains:
+            # print(letter, guess, remove)
             if letter not in guess:
                 remove = True
         if remove:
-            updated_list.remove(guess)
-    check_after = len(updated_list)
-    answer_pool = updated_list
+            # print(f'removed {guess}')
+            updated_list_copy.remove(guess)
 
+    check_after = len(updated_list_copy)
+    answer_pool = updated_list_copy[:]
     if answer_debug:
-        print(f'before regex: {count_before} words after: {len(answer_pool)} words')
+        print(f'before regex: {count_before} words after: {check_b4} words')
         print(f'before answer_contains logic: {check_b4} words after: {check_after} words')
 
     if pool_snapshot:
@@ -241,8 +245,8 @@ def information_theory_approach(guessed_letter_list):
     # index relates to the amount.
     rated_guesses = [[],[],[],[],[],[]]
     # separate words into groups of unguessed letters
-    global validity_pool
-    for guess in validity_pool:
+    global answer_pool
+    for guess in answer_pool:
         score = 0
         for i in range(len(guess)):
             if guess[i] not in guessed_letter_list and guess[i] not in guess[:i]:
