@@ -126,20 +126,32 @@ def update_letter_banks(banks, previous_guess, values):
                                 debug_banks(j)
 
 
-def update_answer_pool(answer_pool):
+#TODO: fix validity pool not removing words that cannot be answer (1s).
+# example - cream -> abbes -> balds -> dings -> downs -> deans
+# after: 401 words
+# ['DEANS', 'DEFIS', 'DENTS', 'DESKS', 'DHAKS', 'DHOWS', 'DIDOS', 'DIFFS', 'DINGS']
+# guess 4: dings
+# [2, 0, 1, 0, 2]
+# before: 401 words
+# after: 13 words
+# ['DEANS', 'DESKS', 'DHAKS', 'DHOWS', 'DOATS', 'DODOS', 'DOFFS', 'DOJOS', 'DOWNS']
+# it should be removing guesses like 'desks' because they do not have an 'n' in them.
+# regex must not be missing crucial part. Will have to look at how that happens.
+def update_valid_pool():
+    global validity_pool
     regex = generate_regex_string()
-    count_before = len(answer_pool)
+    count_before = len(validity_pool)
 
     r = re.compile(regex)
     # filter out all options that don't match regex pattern.
-    updated_list = list(filter(r.match, answer_pool))
-    answer_pool = updated_list
+    updated_list = list(filter(r.match, validity_pool))
+    validity_pool = updated_list
 
     if answer_debug:
-        print(f'before: {count_before} words\nafter: {len(answer_pool)} words')
+        print(f'before: {count_before} words\nafter: {len(validity_pool)} words')
 
     if pool_snapshot:
-        print(answer_pool[:9])
+        print(validity_pool[:9])
     
 
 def update_guessed_letters(guess, guessed_letters):
@@ -199,7 +211,7 @@ def debug_banks(bank):
         print("something is wrong, invalid input for debug_banks")
 
 
-def information_theory_approach(pool, guessed_letter_list):
+def information_theory_approach(guessed_letter_list):
     # TODO: Need to find the word with the highest amount of unguessed letters.
     # general information theory says this is the fastest way to narrow the
     # validity pool to a single answer, I think.
@@ -209,7 +221,8 @@ def information_theory_approach(pool, guessed_letter_list):
     # index relates to the amount.
     rated_guesses = [[],[],[],[],[],[]]
     # separate words into groups of unguessed letters
-    for guess in pool:
+    global validity_pool
+    for guess in validity_pool:
         score = 0
         for i in range(len(guess)):
             if guess[i] not in guessed_letter_list and guess[i] not in guess[:i]:
@@ -253,9 +266,9 @@ def wordle_loop():
                 print(results)
                 generate_regex_string()
                 update_letter_banks(letter_banks, guess, results)
-                update_answer_pool(validity_pool)
+                update_valid_pool()
                 update_guessed_letters(guess, guessed_letters)
-                #information_theory_approach(validity_pool, guessed_letters)
+                #information_theory_approach(guessed_letters)
     
     if result:
         print(f'{answer} guessed in {guesses} attempts.')
