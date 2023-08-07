@@ -9,10 +9,15 @@ import random
 
 # test values
 answer = ""
+# this will contain letters that we know are in the answer.
+# will bridge gap of my regex knowledge.
 answer_contains = []
 
+# the current pool of answers left to guess.
 answer_pool = []
+# the overarching pool of answers valid to guess regardless of knowledge.
 validity_pool = []
+# what letters have been guessed for information theory approach.
 guessed_letters = []
 
 bank_debug = False
@@ -137,21 +142,36 @@ def update_letter_banks(banks, previous_guess, values):
 # ['DEANS', 'DESKS', 'DHAKS', 'DHOWS', 'DOATS', 'DODOS', 'DOFFS', 'DOJOS', 'DOWNS']
 # it should be removing guesses like 'desks' because they do not have an 'n' in them.
 # regex must not be missing crucial part. Will have to look at how that happens.
-def update_valid_pool():
-    global validity_pool
+def update_answer_pool():
+    global answer_pool
     regex = generate_regex_string()
-    count_before = len(validity_pool)
+    count_before = len(answer_pool)
 
     r = re.compile(regex)
     # filter out all options that don't match regex pattern.
-    updated_list = list(filter(r.match, validity_pool))
-    validity_pool = updated_list
+    updated_list = list(filter(r.match, answer_pool))
+    # regex does not take into account the letters that exist in the word
+    # but not in the correct spots. Correct regex string for that, the way
+    # this has been implemented, would be a nightmare to write.
+    # instead we will just remove any words from updated_list that do not contain
+    # the letters from 'answer_contains'. Testing ensues. 
+    check_b4 = len(updated_list)
+    for guess in updated_list:
+        remove = False
+        for letter in answer_contains:
+            if letter not in guess:
+                remove = True
+        if remove:
+            updated_list.remove(guess)
+    check_after = len(updated_list)
+    answer_pool = updated_list
 
     if answer_debug:
-        print(f'before: {count_before} words\nafter: {len(validity_pool)} words')
+        print(f'before regex: {count_before} words after: {len(answer_pool)} words')
+        print(f'before answer_contains logic: {check_b4} words after: {check_after} words')
 
     if pool_snapshot:
-        print(validity_pool[:9])
+        print(answer_pool[:9])
     
 
 def update_guessed_letters(guess, guessed_letters):
@@ -241,7 +261,8 @@ def wordle_loop():
     # general cycle of input/output from wordle so far.
     fill_answer_pool(answer_pool)
     fill_answer_pool(validity_pool)
-    answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
+    # answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
+    answer = "DEANS"
     guessing = True
     guesses = 0
     result = False
@@ -266,7 +287,7 @@ def wordle_loop():
                 print(results)
                 generate_regex_string()
                 update_letter_banks(letter_banks, guess, results)
-                update_valid_pool()
+                update_answer_pool()
                 update_guessed_letters(guess, guessed_letters)
                 #information_theory_approach(guessed_letters)
     
