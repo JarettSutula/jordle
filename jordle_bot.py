@@ -17,9 +17,9 @@ guessed_letters = []
 
 bank_debug = False
 guess_debug = False
-answer_debug = False
+answer_debug = True
 regex_debug = False
-pool_snapshot = False
+pool_snapshot = True
 information_theory_debug = False
 
 # letter banks will keep track of chars viable for each slot in the wordle. 1 for each slot.
@@ -126,7 +126,6 @@ def update_letter_banks(banks, previous_guess, values):
                                 debug_banks(j)
 
 
-# TODO: update word pool based on updated letter banks for each slot. order should not matter.
 def update_answer_pool(answer_pool):
     regex = generate_regex_string()
     count_before = len(answer_pool)
@@ -200,7 +199,7 @@ def debug_banks(bank):
         print("something is wrong, invalid input for debug_banks")
 
 
-def information_theory_approach():
+def information_theory_approach(pool, guessed_letter_list):
     # TODO: Need to find the word with the highest amount of unguessed letters.
     # general information theory says this is the fastest way to narrow the
     # validity pool to a single answer, I think.
@@ -208,11 +207,21 @@ def information_theory_approach():
 
     # store words based on how many unguessed letters they contain.
     # index relates to the amount.
-    rated_guesses = [[],[],[],[],[]]
+    rated_guesses = [[],[],[],[],[],[]]
     # separate words into groups of unguessed letters
-    for guess in validity_pool:
-        # WIP.
-        pass
+    for guess in pool:
+        score = 0
+        for i in range(len(guess)):
+            if guess[i] not in guessed_letter_list and guess[i] not in guess[:i]:
+                score += 1
+        rated_guesses[score].append(guess)
+
+    if information_theory_debug:
+        for i in range(len(rated_guesses)):
+            if i > 3:
+                print(f'{i} score guesses: \n')
+                print(rated_guesses)
+    
 
 
 def wordle_loop():
@@ -244,8 +253,9 @@ def wordle_loop():
                 print(results)
                 generate_regex_string()
                 update_letter_banks(letter_banks, guess, results)
-                update_answer_pool(answer_pool)
+                update_answer_pool(validity_pool)
                 update_guessed_letters(guess, guessed_letters)
+                #information_theory_approach(validity_pool, guessed_letters)
     
     if result:
         print(f'{answer} guessed in {guesses} attempts.')
