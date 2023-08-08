@@ -239,7 +239,6 @@ def information_theory_approach(guessed_letter_list):
     # TODO: Need to find the word with the highest amount of unguessed letters.
     # general information theory says this is the fastest way to narrow the
     # validity pool to a single answer, I think.
-    # will likely end up using validity_pool as a parameter to search.
 
     # store words based on how many unguessed letters they contain.
     # index relates to the amount.
@@ -255,9 +254,9 @@ def information_theory_approach(guessed_letter_list):
 
     if information_theory_debug:
         for i in range(len(rated_guesses)):
-            if i > 3:
-                print(f'{i} score guesses: \n')
-                print(rated_guesses)
+            if len(rated_guesses[i]) > 0:
+                print(f'{i} score guesses:')
+                print(rated_guesses[i])
     
 
 
@@ -293,7 +292,7 @@ def wordle_loop():
                 update_letter_banks(letter_banks, guess, results)
                 update_answer_pool()
                 update_guessed_letters(guess, guessed_letters)
-                #information_theory_approach(guessed_letters)
+                information_theory_approach(guessed_letters)
     
     if result:
         print(f'{answer} guessed in {guesses} attempts.')
