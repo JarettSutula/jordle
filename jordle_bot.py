@@ -236,7 +236,7 @@ def debug_banks(bank):
 
 
 def information_theory_approach(guessed_letter_list):
-    # TODO: Need to find the word with the highest amount of unguessed letters.
+    # Need to find the word with the highest amount of unguessed letters.
     # general information theory says this is the fastest way to narrow the
     # validity pool to a single answer, I think.
 
@@ -245,6 +245,7 @@ def information_theory_approach(guessed_letter_list):
     rated_guesses = [[],[],[],[],[],[]]
     # separate words into groups of unguessed letters
     global answer_pool
+    highest = 0
     for guess in answer_pool:
         score = 0
         for i in range(len(guess)):
@@ -258,6 +259,15 @@ def information_theory_approach(guessed_letter_list):
                 print(f'{i} score guesses:')
                 print(rated_guesses[i])
     
+    # we'll have to select the highest 'score' word list. can do this backwards.
+    for i in range(len(rated_guesses)-1, -1, -1):
+        if len(rated_guesses[i]) > 0:
+            highest = i
+            break
+    
+    # TODO: Select the most frequently occuring words (ex - DEALS is more likely
+    # the wordle than, say, "DEGAS" or "DELFS", which are legitimate words, but 
+    # less likely to be on Wordle to avoid upsetting players.
 
 
 def wordle_loop():
