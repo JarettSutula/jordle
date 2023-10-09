@@ -6,6 +6,7 @@
 import string
 import re
 import random
+from wordfreq import zipf_frequency
 
 # test values
 answer = ""
@@ -268,6 +269,21 @@ def information_theory_approach(guessed_letter_list):
     # TODO: Select the most frequently occuring words (ex - DEALS is more likely
     # the wordle than, say, "DEGAS" or "DELFS", which are legitimate words, but 
     # less likely to be on Wordle to avoid upsetting players.
+    # thse are just tests of first 5 guesses to ensure it's working as intended.
+    max = 0
+    index = 0
+    if len(rated_guesses[highest]) > 5 and information_theory_debug:
+        for i in range(5):
+            freq_word = rated_guesses[highest][i]
+            freq = zipf_frequency(freq_word, 'en', wordlist='small')
+            print(freq_word, freq)
+            if freq > max:
+                max = freq
+                index = i
+    
+    # test print.
+    if information_theory_debug:
+        print(f' {rated_guesses[highest][index]} is the highest rated guess at {max}.')
 
 
 def wordle_loop():
