@@ -21,12 +21,20 @@ validity_pool = []
 # what letters have been guessed for information theory approach.
 guessed_letters = []
 
+# for later (eventual) web implementation. store guesses and results for display.
+final_guesses = []
+final_results = []
+
+# debug statements
 bank_debug = False
 guess_debug = False
-answer_debug = True
+answer_debug = False
 regex_debug = False
-pool_snapshot = True
-information_theory_debug = True
+pool_snapshot = False
+current_letters_debug = False
+summary_debug = True
+scored_guesses_debug = False
+frequency_debug = True
 
 # letter banks will keep track of chars viable for each slot in the wordle. 1 for each slot.
 letter_banks = []
@@ -60,6 +68,10 @@ def guess_result_test(previous_guess, answer):
             # get first instance of said element.
             index = answer_mod.index(char)
             answer_mod[index] = '-'
+
+    # add guess and result to overall lists.
+    final_guesses.append(previous_guess)
+    final_results.append(result)
 
     return result
 
@@ -133,17 +145,6 @@ def update_letter_banks(banks, previous_guess, values):
                                 debug_banks(j)
 
 
-#TODO: fix validity pool not removing words that cannot be answer (1s).
-# example - cream -> abbes -> balds -> dings -> downs -> deans
-# after: 401 words
-# ['DEANS', 'DEFIS', 'DENTS', 'DESKS', 'DHAKS', 'DHOWS', 'DIDOS', 'DIFFS', 'DINGS']
-# guess 4: dings
-# [2, 0, 1, 0, 2]
-# before: 401 words
-# after: 13 words
-# ['DEANS', 'DESKS', 'DHAKS', 'DHOWS', 'DOATS', 'DODOS', 'DOFFS', 'DOJOS', 'DOWNS']
-# it should be removing guesses like 'desks' because they do not have an 'n' in them.
-# regex must not be missing crucial part. Will have to look at how that happens.
 def update_answer_pool():
     global answer_pool
     regex = generate_regex_string()
@@ -187,7 +188,7 @@ def update_guessed_letters(guess, guessed_letters):
         if guess[i] not in guessed_letters:
             guessed_letters += guess[i]
     
-    if information_theory_debug:
+    if current_letters_debug:
         print(f'current guess: {guess} letters so far: {guessed_letters}')
 
 
@@ -255,7 +256,7 @@ def information_theory_approach(guessed_letter_list):
                 score += 1
         rated_guesses[score].append(guess)
 
-    if information_theory_debug:
+    if scored_guesses_debug:
         for i in range(len(rated_guesses)):
             if len(rated_guesses[i]) > 0:
                 print(f'{i} score guesses:')
@@ -276,14 +277,14 @@ def information_theory_approach(guessed_letter_list):
     frequencies = {}
     for i in range(len(rated_guesses[highest])):
         freq_word = rated_guesses[highest][i]
-        freq = zipf_frequency(freq_word, 'en', wordlist='small')
+        freq = zipf_frequency(freq_word, 'en', wordlist='best')
         frequencies[freq_word] = freq
     
     # sort frequencies by key.
     # a list of (word, freq)s... key is tuple[0] and value is tuple[1]
     sorted_frequencies = sorted(frequencies.items(), key= lambda x:x[1], reverse=True)
     # test print.
-    if information_theory_debug:
+    if frequency_debug:
         for i in range(len(sorted_frequencies)):
             # only want the first 10!
             if i > 9:
@@ -296,11 +297,8 @@ def wordle_loop():
     # general cycle of input/output from wordle so far.
     fill_answer_pool(answer_pool)
     fill_answer_pool(validity_pool)
-    answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
-    answer = "GOOPY"
-    # guesses - dream > think > focus > blowy > ology > cream
-    # something going wrong - the 'o' in focus shows up as 1 even though it is a valid place for 'GOOPY'.
-    # this removes 'GOOPY' from the answer list for some reason. need to revisit how words are erased from pool.
+    # answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
+    answer = "GHOST"
     guessing = True
     guesses = 0
     result = False
@@ -319,11 +317,12 @@ def wordle_loop():
             if guess == answer:
                 guessing = False
                 result = True
+                final_guesses.append(guess)
+                final_results.append([2, 2, 2, 2, 2])
         
             else:
                 results = guess_result_test(guess, answer)
                 print(results)
-                generate_regex_string()
                 update_letter_banks(letter_banks, guess, results)
                 update_answer_pool()
                 update_guessed_letters(guess, guessed_letters)
@@ -333,5 +332,9 @@ def wordle_loop():
         print(f'{answer} guessed in {guesses} attempts.')
     else:
         print(f'{answer} not guessed in {guesses} attempts.')
+
+    if summary_debug:
+        for i in range(len(final_guesses)):
+            print(f'guess {i + 1}: {final_guesses[i]} - {final_results[i]}')
 
 wordle_loop()
