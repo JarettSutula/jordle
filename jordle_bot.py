@@ -270,28 +270,36 @@ def information_theory_approach(guessed_letter_list):
     # TODO: Select the most frequently occuring words (ex - DEALS is more likely
     # the wordle than, say, "DEGAS" or "DELFS", which are legitimate words, but 
     # less likely to be on Wordle to avoid upsetting players.
-    max = 0
-    index = 0
 
+    # make a dictionary to sort all words by their frequency. will display top 10 choices
+    frequencies = {}
     for i in range(len(rated_guesses[highest])):
         freq_word = rated_guesses[highest][i]
         freq = zipf_frequency(freq_word, 'en', wordlist='small')
-        print(freq_word, freq)
-        if freq > max:
-            max = freq
-            index = i
+        frequencies[freq_word] = freq
     
+    # sort frequencies by key.
+    # a list of (word, freq)s... key is tuple[0] and value is tuple[1]
+    sorted_frequencies = sorted(frequencies.items(), key= lambda x:x[1], reverse=True)
     # test print.
     if information_theory_debug:
-        print(f' {rated_guesses[highest][index]} is the highest rated guess at {max}.')
+        for i in range(len(sorted_frequencies)):
+            # only want the first 10!
+            if i > 9:
+                break
+            else:
+                print(f' {i+1}. {sorted_frequencies[i][0]}: {sorted_frequencies[i][1]}.')
 
 
 def wordle_loop():
     # general cycle of input/output from wordle so far.
     fill_answer_pool(answer_pool)
     fill_answer_pool(validity_pool)
-    # answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
-    answer = "DEANS"
+    answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
+    answer = "GOOPY"
+    # guesses - dream > think > focus > blowy > ology > cream
+    # something going wrong - the 'o' in focus shows up as 1 even though it is a valid place for 'GOOPY'.
+    # this removes 'GOOPY' from the answer list for some reason. need to revisit how words are erased from pool.
     guessing = True
     guesses = 0
     result = False
