@@ -52,9 +52,10 @@ def guess_result_test(previous_guess, answer):
             answer_mod[i] = '-'
 
     # now that correct ones are done, do the same with one that are misplaced.
+    # NOTE: this will overwrite a previously correct '2' value. need to fix that.
     for i in range(len(answer)):
         char = previous_guess[i]
-        if char in answer_mod:
+        if char in answer_mod and result[i] != 2:
             result[i] = 1
             # get first instance of said element.
             index = answer_mod.index(char)
