@@ -25,15 +25,26 @@ guessed_letters = []
 final_guesses = []
 final_results = []
 
-# debug statements
+# DEBUG STATEMENTS
+# show letter banks updating and removing based on guess.
 bank_debug = False
+# shows answer at the start.
 guess_debug = False
-answer_debug = False
+# shows the resulting 0, 1, 2 list for each guess against the answer (RECOMMENDED)
+results_debug = True
+# shows counts of before/after filling answer pool, regex adjustment, answer_contains.
+answer_pool_debug = False
+# shows regex string after updating banks and answer_contains
 regex_debug = False
+# shows first 10 answers in pool (alphabetical, mostly useless now)
 pool_snapshot = False
+# shows guessed letters so far for information theory approach.
 current_letters_debug = False
+# at the end, shows all guesses and their resulting [0,1,2] lists.
 summary_debug = True
+# shows all answers in updated pool, scored by how many new letters are in them. 0-5.
 scored_guesses_debug = False
+# show top 10 (sorted) options for next guess based on highest score + most frequent in English
 frequency_debug = True
 
 # letter banks will keep track of chars viable for each slot in the wordle. 1 for each slot.
@@ -46,7 +57,7 @@ if guess_debug:
 
 # TODO: assign values to letters based on their guesses from previous iteration. 
 # (ex: 0 = does not appear at all, 1 = appears but not in this slot, 2 = in correct slot)
-def guess_result_test(previous_guess, answer):
+def check_guess(previous_guess, answer):
     result = [0, 0, 0, 0, 0]
     # need to go through and mark every correct slot with a "-"
     # example - the guess 'level' into 'baker' should NOT show a 1 for the first e since there is only 1 e and it
@@ -73,6 +84,9 @@ def guess_result_test(previous_guess, answer):
     final_guesses.append(previous_guess)
     final_results.append(result)
 
+    # print result after each guess (like wordle does)
+    if results_debug:
+        print(result)
     return result
 
 
@@ -173,7 +187,7 @@ def update_answer_pool():
 
     check_after = len(updated_list_copy)
     answer_pool = updated_list_copy[:]
-    if answer_debug:
+    if answer_pool_debug:
         print(f'before regex: {count_before} words after: {check_b4} words')
         print(f'before answer_contains logic: {check_b4} words after: {check_after} words')
 
@@ -223,9 +237,9 @@ def fill_answer_pool(answer_list):
     
     pool_file.close()
     
-    if answer_debug:
+    if answer_pool_debug:
         print(f'added {count} words to answer pool.')
-        print(f'first word is {answer_list[1]} and last word is {answer_list[-1]}')
+        print(f'first word is {answer_list[0]} and last word is {answer_list[-1]}')
 
 
 def debug_banks(bank):
@@ -297,8 +311,8 @@ def wordle_loop():
     # general cycle of input/output from wordle so far.
     fill_answer_pool(answer_pool)
     fill_answer_pool(validity_pool)
-    # answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
-    answer = "GHOST"
+    answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
+    # answer = "GHOST"
     guessing = True
     guesses = 0
     result = False
@@ -321,11 +335,12 @@ def wordle_loop():
                 final_results.append([2, 2, 2, 2, 2])
         
             else:
-                results = guess_result_test(guess, answer)
-                print(results)
+                # generate values 0, 1, 2 for each letter in the guess and save them to update information.
+                results = check_guess(guess, answer)
                 update_letter_banks(letter_banks, guess, results)
                 update_answer_pool()
                 update_guessed_letters(guess, guessed_letters)
+                # with information ready for next guess, pick best options for next guess.
                 information_theory_approach(guessed_letters)
     
     if result:
