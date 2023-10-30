@@ -33,7 +33,7 @@ guess_debug = False
 # shows the resulting 0, 1, 2 list for each guess against the answer (RECOMMENDED)
 results_debug = True
 # shows counts of before/after filling answer pool, regex adjustment, answer_contains.
-answer_pool_debug = False
+answer_pool_debug = True
 # shows regex string after updating banks and answer_contains
 regex_debug = False
 # shows first 10 answers in pool (alphabetical, mostly useless now)
@@ -55,8 +55,6 @@ if guess_debug:
     print(f'wordle answer is {answer}')
 
 
-# TODO: assign values to letters based on their guesses from previous iteration. 
-# (ex: 0 = does not appear at all, 1 = appears but not in this slot, 2 = in correct slot)
 def check_guess(previous_guess, answer):
     result = [0, 0, 0, 0, 0]
     # need to go through and mark every correct slot with a "-"
@@ -90,7 +88,6 @@ def check_guess(previous_guess, answer):
     return result
 
 
-# TODO: update letter banks based on values of previous iteration. may need to assign priority here.
 def update_letter_banks(banks, previous_guess, values):
     # go through every matching letters and update banks.
     if bank_debug:
@@ -283,11 +280,16 @@ def information_theory_approach(guessed_letter_list):
             highest = i
             break
     
-    # TODO: Select the most frequently occuring words (ex - DEALS is more likely
+    # Select the most frequently occuring words (ex - DEALS is more likely
     # the wordle than, say, "DEGAS" or "DELFS", which are legitimate words, but 
     # less likely to be on Wordle to avoid upsetting players.
-
     # make a dictionary to sort all words by their frequency. will display top 10 choices
+    # TODO: if there is 1 2-score word and 20+ 1-score words, we should try to show 10 combined
+    # (2 score word, 9 1-score words). It can be misleading to only see '1' word to guess
+    # and that not end up being the answer. NOTE: need to decide how to prioritize top 10.
+    # a 0.0 frequency 3-score words gives us more info than a 4.2 frequency 2-score word, but
+    # which one is more likely to be the wordle? should it be dependent on the number of turns
+    # left (earlier turns: more info, later turns: more likely guesses)?
     frequencies = {}
     for i in range(len(rated_guesses[highest])):
         freq_word = rated_guesses[highest][i]
@@ -296,6 +298,9 @@ def information_theory_approach(guessed_letter_list):
     
     # sort frequencies by key.
     # a list of (word, freq)s... key is tuple[0] and value is tuple[1]
+    # NOTE: could potentially do (key, value, score)? use some aggregate value * score to assign
+    # priority somewhat fairly? some deeper form of (value * score) / turn to make smarter decision based
+    # on how far we are through a wordle cycle.
     sorted_frequencies = sorted(frequencies.items(), key= lambda x:x[1], reverse=True)
     # test print.
     if frequency_debug:
@@ -304,7 +309,7 @@ def information_theory_approach(guessed_letter_list):
             if i > 9:
                 break
             else:
-                print(f' {i+1}. {sorted_frequencies[i][0]}: {sorted_frequencies[i][1]}.')
+                print(f' {i+1}. {sorted_frequencies[i][0]}: {sorted_frequencies[i][1]} .')
 
 
 def wordle_loop():
