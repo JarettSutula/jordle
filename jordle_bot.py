@@ -313,11 +313,24 @@ def information_theory_approach(guessed_letter_list):
 
 
 def wordle_loop():
+    # two options - jordle, where answer is grabbed from API and guessed.
+    # wordle - feed bot results manually and let it give you the next guess.
+    while True:
+        mode = input("Jordle or Wordle? j/w: ")
+        if mode not in ["j", "w"]:
+            print("please pick between jordle or wordle approach.")
+        else:
+            break
+        
+    print(mode)
     # general cycle of input/output from wordle so far.
     fill_answer_pool(answer_pool)
     fill_answer_pool(validity_pool)
-    answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
-    # answer = "GHOST"
+    # if we are guessing word (for testing purposes) grab random one.
+    # in future, this will be the result of the API.
+    if mode == "j":
+        answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
+        # answer = "GHOST"
     guessing = True
     guesses = 0
     result = False
@@ -332,16 +345,38 @@ def wordle_loop():
             
         else:
             guesses += 1
+            # split here based on jordle/wordle.
+            if mode == "w":
+                # provide own results to run check.
+                while True:
+                    results_input = input("results: ")
+                    results = results_input.split()
+                    # should all be ints.
+                    try:
+                        results = list(map(int, results))
+                    except: 
+                        print("please enter numbers only.")
+                    else:
+                        if all(x in [0, 1, 2] for x in results) and len(results) == 5:
+                            break
+                        else:
+                            print("Please type the 5 results from 0-2.")
+
+            if mode == "j":
+                results = check_guess(guess, answer)
             
-            if guess == answer:
+            if results == [2, 2, 2, 2, 2]:
+                # regardless 
                 guessing = False
                 result = True
-                final_guesses.append(guess)
-                final_results.append([2, 2, 2, 2, 2])
+                if mode == "w":
+                    # need to manually update lists since we aren't calling check_guess
+                    final_guesses.append(guess)
+                    final_results.append(results)
+                    # just for output.
+                    answer = guess
         
             else:
-                # generate values 0, 1, 2 for each letter in the guess and save them to update information.
-                results = check_guess(guess, answer)
                 update_letter_banks(letter_banks, guess, results)
                 update_answer_pool()
                 update_guessed_letters(guess, guessed_letters)
