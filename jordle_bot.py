@@ -358,6 +358,9 @@ def wordle_loop():
                         print("please enter numbers only.")
                     else:
                         if all(x in [0, 1, 2] for x in results) and len(results) == 5:
+                            # update the guess and results since we are not calling check_guess.
+                            final_guesses.append(guess)
+                            final_results.append(results)
                             break
                         else:
                             print("Please type the 5 results from 0-2.")
@@ -370,9 +373,6 @@ def wordle_loop():
                 guessing = False
                 result = True
                 if mode == "w":
-                    # need to manually update lists since we aren't calling check_guess
-                    final_guesses.append(guess)
-                    final_results.append(results)
                     # just for output.
                     answer = guess
         
