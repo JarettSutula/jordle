@@ -1,4 +1,5 @@
 import string
+import re
 
 class Jordle:
     def __init__(self, answer, guess):
@@ -6,8 +7,8 @@ class Jordle:
         self.guess = guess
         self.letter_banks = []
         self.answer_contains = []
-        self.answer_pool = []
-        self.validity_pool = []
+        self.answer_pool = AnswerPool()
+        self.validity_pool = AnswerPool()
         self.guessed_letters = []
         self.final_guesses = []
         self.final_results = []
@@ -37,4 +38,107 @@ class Jordle:
         # add guess and result to lists for output
         self.final_guesses.append(self.guess)
         self.final_results.append(result)
+
+    def update_letter_banks(self):
+        previous_guess = self.final_guesses[-1]
+        previous_guess_result = self.final_results[-1]
+        for i in range(len(previous_guess_result)):
+            if previous_guess_result[i] == 2:
+                self.letter_banks[i] = [previous_guess[i]]
+                self.answer_contains.append(previous_guess[i])
+        
+        # if it's a 1, remove letter from current slot bank.
+        for i in range(len(previous_guess_result)):
+            if previous_guess_result[i] == 1:
+                if previous_guess[i] in self.letter_banks[i]:
+                    self.letter_banks[i].remove(previous_guess[i])
+                else:
+                    print(f'cannot remove {previous_guess[i]} from letter bank {i}')
+
+                if previous_guess[i] not in self.answer_contains:
+                    self.answer_contains.append(previous_guess[i])
+
+        # if it's a 0, remove letter from all letter banks...
+        # unless the letter exists somewhere else in the guess and that value is a 2.
+        for i in range(len(previous_guess_result)):
+            if previous_guess_result[i] == 0:
+                # regardless of whether or not this is the only instance of this letter, it should be removed from its bank.
+                # if previous_guess[i] in letter_banks[i]:
+                #     letter_banks[i].remove(previous_guess[i])
+
+                # if this is the only count of this char in the guess, remove from all banks.
+                if previous_guess.count(previous_guess[i]) == 1:
+                    for j in range(len(previous_guess_result)):
+                        if previous_guess[i] in self.letter_banks[j]:
+                            self.letter_banks[j].remove(previous_guess[i])
+                else:
+                    # we have more than 1 instance of that letter in the guess. Go through each slot and check and remove.
+                    for j in range(len(previous_guess_result)):
+                        # if we have an instance where we have a reoccuring letter in the guess..
+                        if previous_guess[j] == previous_guess[i]:
+                            # if it isn't a correct value (2), remove it from that specific letter bank.
+                            if previous_guess_result[j] != 2 and previous_guess[j] in self.letter_banks[j]:
+                                self.letter_banks[j].remove(previous_guess[j])
+
+    def update_guessed_letters(self):
+        guess = self.final_guesses[-1]
+        for i in range(len(guess)):
+            if guess[i] not in self.guessed_letters:
+                self.guessed_letters += guess[i]
+
+
+class AnswerPool:
+    def __init__(self):
+        self.pool = []
+        pool_file = open('5_letter_dict.txt', 'r')
+        answers = pool_file.readlines()
+        count = 0
+
+        for answer in answers:
+            self.pool.append(answer.strip())
+            count += 1
+        
+        pool_file.close()
+    
+    def update(self):
+        strings = []
+        for bank in self.letter_banks:
+            # Don't need brackets for single letters.
+            if len(bank) == 1:
+                strings.append(bank[0])
+            else:
+                result = "["
+                for letter in bank:
+                    result += letter
+                result += "]"
+                strings.append(result)
+        
+        regex = "".join(strings)
+
+        count_before = len(self.pool)
+
+        r = re.compile(regex)
+        # filter out all options that don't match regex pattern.
+        updated_list = list(filter(r.match, self.pool))
+        # regex does not take into account the letters that exist in the word
+        # but not in the correct spots. Correct regex string for that, the way
+        # this has been implemented, would be a nightmare to write.
+        # instead we will just remove any words from updated_list that do not contain
+        # the letters from 'answer_contains'. Testing ensues. 
+        check_b4 = len(updated_list)
+        # separate list to ensure the loop does not get thrown by mid-iteration removal.
+        updated_list_copy = updated_list[:]
+        for guess in updated_list:
+            remove = False
+            for letter in self.answer_contains:
+                # print(letter, guess, remove)
+                if letter not in guess:
+                    remove = True
+            if remove:
+                # print(f'removed {guess}')
+                updated_list_copy.remove(guess)
+
+        check_after = len(updated_list_copy)
+        self.pool = updated_list_copy[:]
+
 
