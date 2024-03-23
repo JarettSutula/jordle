@@ -69,7 +69,6 @@ def check_guess(previous_guess, answer):
             answer_mod[i] = '-'
 
     # now that correct ones are done, do the same with one that are misplaced.
-    # NOTE: this will overwrite a previously correct '2' value. need to fix that.
     for i in range(len(answer)):
         char = previous_guess[i]
         if char in answer_mod and result[i] != 2:
@@ -309,7 +308,7 @@ def information_theory_approach(guessed_letter_list):
             if i > 9:
                 break
             else:
-                print(f' {i+1}. {sorted_frequencies[i][0]}: {sorted_frequencies[i][1]} .')
+                print(f' {i+1}. {sorted_frequencies[i][0]}: {sorted_frequencies[i][1]}')
 
 
 def wordle_loop():
@@ -329,8 +328,8 @@ def wordle_loop():
     # if we are guessing word (for testing purposes) grab random one.
     # in future, this will be the result of the API.
     if mode == "j":
-        answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
-        # answer = "GHOST"
+        # answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
+        answer = "SHADE"
     guessing = True
     guesses = 0
     result = False
