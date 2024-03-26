@@ -329,7 +329,7 @@ def wordle_loop():
     # in future, this will be the result of the API.
     if mode == "j":
         # answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
-        answer = "SHADE"
+        answer = "EMBER"
     guessing = True
     guesses = 0
     result = False

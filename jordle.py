@@ -20,13 +20,17 @@ class Jordle:
         # shows the resulting 0, 1, 2 list for each guess against the answer (RECOMMENDED)
         self.results_debug = True
         # shows guessed letters so far for information theory approach.
-        self.current_letters_debug = False
-        # at the end, shows all guesses and their resulting [0,1,2] lists.
-        self.summary_debug = True
+        self.current_letters_debug = True
         # shows all answers in updated pool, scored by how many new letters are in them. 0-5.
         self.scored_guesses_debug = False
         # show top 10 (sorted) options for next guess based on highest score + most frequent in English
         self.frequency_debug = True
+        # shows first 10 answers in pool (alphabetical, mostly useless now)
+        self.pool_snapshot = False
+        # shows regex string after updating banks and answer_contains
+        self.regex_debug = False
+        # shows counts of before/after filling answer pool, regex adjustment, answer_contains.
+        self.answer_pool_debug = False
 
     def populate_banks(self):
         for i in range(5): 
@@ -62,7 +66,7 @@ class Jordle:
         if i == -1:
             for bank in self.letter_banks:
                 print(bank)
-        elif 0 <= bank <= 4:
+        elif 0 <= i <= 4:
             print(f'bank slot {i}: {self.letter_banks[i]}')
         else:
             print("something is wrong, invalid input for debug_banks")
@@ -150,6 +154,8 @@ class Jordle:
     def choose_guess(self):
         # check if we even need to make a new guess.
         if self.guess == self.answer:
+            # add final guess and result to lists.
+            print("yippee!")
             exit()
         # Need to find the word with the highest amount of unguessed letters.
         # general information theory says this is the fastest way to narrow the
@@ -215,31 +221,7 @@ class Jordle:
         self.guess = sorted_frequencies[0][0]
 
 
-class AnswerPool:
-    def __init__(self):
-        self.pool = []
-        # shows first 10 answers in pool (alphabetical, mostly useless now)
-        self.pool_snapshot = True
-        # shows counts of before/after filling answer pool, regex adjustment, answer_contains.
-        self.answer_pool_debug = True
-        # shows regex string after updating banks and answer_contains
-        self.regex_debug = False
-
-        pool_file = open('5_letter_dict.txt', 'r')
-        answers = pool_file.readlines()
-        count = 0
-
-        for answer in answers:
-            self.pool.append(answer.strip())
-            count += 1
-        
-        pool_file.close()
-
-        if self.answer_pool_debug:
-            print(f'added {count} words to answer pool.')
-            print(f'first word is {self.pool[0]} and last word is {self.pool[-1]}')
-    
-    def update(self):
+    def update_answer_pool(self):
         # generate regex based off of current letter banks
         strings = []
         for bank in self.letter_banks:
@@ -258,11 +240,11 @@ class AnswerPool:
             print(f'combined strings: {strings}')
             print(f'regex string: {regex}')
 
-        count_before = len(self.pool)
+        count_before = len(self.answer_pool.pool)
 
         r = re.compile(regex)
         # filter out all options that don't match regex pattern.
-        updated_list = list(filter(r.match, self.pool))
+        updated_list = list(filter(r.match, self.answer_pool.pool))
         # regex does not take into account the letters that exist in the word
         # but not in the correct spots. Correct regex string for that, the way
         # this has been implemented, would be a nightmare to write.
@@ -282,13 +264,33 @@ class AnswerPool:
                 updated_list_copy.remove(guess)
 
         check_after = len(updated_list_copy)
-        self.pool = updated_list_copy[:]
+        self.answer_pool.pool = updated_list_copy[:]
 
         if self.answer_pool_debug:
             print(f'before regex: {count_before} words after: {check_b4} words')
             print(f'before answer_contains logic: {check_b4} words after: {check_after} words')
 
         if self.pool_snapshot:
-            print(self.pool[:9])
+            print(self.answer_pool.pool[:9])
 
 
+class AnswerPool:
+    def __init__(self):
+        self.pool = []
+        # shows counts of before/after filling answer pool, regex adjustment, answer_contains.
+        self.answer_pool_debug = True
+
+        pool_file = open('5_letter_dict.txt', 'r')
+        answers = pool_file.readlines()
+        count = 0
+
+        for answer in answers:
+            self.pool.append(answer.strip())
+            count += 1
+        
+        pool_file.close()
+
+        if self.answer_pool_debug:
+            print(f'added {count} words to answer pool.')
+            print(f'first word is {self.pool[0]} and last word is {self.pool[-1]}')
+    
