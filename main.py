@@ -11,6 +11,7 @@ while len(test_jordle.final_guesses) < 6:
         test_jordle.update_letter_banks()
         test_jordle.update_guessed_letters()
         test_jordle.choose_guess()
+        input()
 
 if test_jordle.final_results[-1] != test_jordle.answer:
     print(f"Jordle did not guess the answer correctly after {len(test_jordle.final_guesses)} guesses.")

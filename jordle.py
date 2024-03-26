@@ -13,6 +13,20 @@ class Jordle:
         self.guessed_letters = []
         self.final_guesses = []
         self.final_results = []
+        # show letter banks updating and removing based on guess.
+        self.bank_debug = False
+        # shows answer at the start.
+        self.guess_debug = False
+        # shows the resulting 0, 1, 2 list for each guess against the answer (RECOMMENDED)
+        self.results_debug = True
+        # shows guessed letters so far for information theory approach.
+        self.current_letters_debug = False
+        # at the end, shows all guesses and their resulting [0,1,2] lists.
+        self.summary_debug = True
+        # shows all answers in updated pool, scored by how many new letters are in them. 0-5.
+        self.scored_guesses_debug = False
+        # show top 10 (sorted) options for next guess based on highest score + most frequent in English
+        self.frequency_debug = True
 
     def populate_banks(self):
         for i in range(5): 
@@ -40,14 +54,41 @@ class Jordle:
         self.final_guesses.append(self.guess)
         self.final_results.append(result)
 
+        if self.results_debug:
+            print(result)
+
+
+    def debug_banks(self, i):
+        if i == -1:
+            for bank in self.letter_banks:
+                print(bank)
+        elif 0 <= bank <= 4:
+            print(f'bank slot {i}: {self.letter_banks[i]}')
+        else:
+            print("something is wrong, invalid input for debug_banks")
+
+
     def update_letter_banks(self):
+        if self.bank_debug:
+            two_count = self.final_results[-1].count(2)
+            print(f'\nGoing through correct values: should be {two_count}.')
+
         previous_guess = self.final_guesses[-1]
         previous_guess_result = self.final_results[-1]
         for i in range(len(previous_guess_result)):
             if previous_guess_result[i] == 2:
+                if self.bank_debug:
+                    print(f"before correct char in slot {i}:")
+                    self.debug_banks(i)
                 self.letter_banks[i] = [previous_guess[i]]
                 self.answer_contains.append(previous_guess[i])
+                if self.bank_debug:
+                    print(f"after correct char in slot {i}:")
+                    self.debug_banks(-1)
         
+        if self.bank_debug:
+            one_count = self.final_results[-1].count(1)
+            print(f'\nGoing through correct but misplaced values: should be {one_count}.')
         # if it's a 1, remove letter from current slot bank.
         for i in range(len(previous_guess_result)):
             if previous_guess_result[i] == 1:
@@ -58,9 +99,15 @@ class Jordle:
 
                 if previous_guess[i] not in self.answer_contains:
                     self.answer_contains.append(previous_guess[i])
+                if self.bank_debug: 
+                    print(f"removing letter '{previous_guess[i]}' from bank {i}")
+                    self.debug_banks(i)
 
         # if it's a 0, remove letter from all letter banks...
         # unless the letter exists somewhere else in the guess and that value is a 2.
+        if self.bank_debug:
+            zero_count = self.final_results[-1].count(0)
+            print(f'\nGoing through incorrect values: should be {zero_count}.')
         for i in range(len(previous_guess_result)):
             if previous_guess_result[i] == 0:
                 # regardless of whether or not this is the only instance of this letter, it should be removed from its bank.
@@ -72,6 +119,12 @@ class Jordle:
                     for j in range(len(previous_guess_result)):
                         if previous_guess[i] in self.letter_banks[j]:
                             self.letter_banks[j].remove(previous_guess[i])
+                            if self.bank_debug:
+                                print(f'removed {previous_guess[i]} from letter bank {j}')
+                                self.debug_banks(j)
+                    if self.bank_debug: 
+                        print(f"removed letter '{previous_guess[i]}' from all banks")
+                        self.debug_banks(-1)
                 else:
                     # we have more than 1 instance of that letter in the guess. Go through each slot and check and remove.
                     for j in range(len(previous_guess_result)):
@@ -80,12 +133,18 @@ class Jordle:
                             # if it isn't a correct value (2), remove it from that specific letter bank.
                             if previous_guess_result[j] != 2 and previous_guess[j] in self.letter_banks[j]:
                                 self.letter_banks[j].remove(previous_guess[j])
+                                if self.bank_debug:
+                                    print(f'removing {previous_guess[i]} from letter bank {j} code=003')
+                                    self.debug_banks(j)
 
     def update_guessed_letters(self):
         guess = self.final_guesses[-1]
         for i in range(len(guess)):
             if guess[i] not in self.guessed_letters:
                 self.guessed_letters += guess[i]
+        
+        if self.current_letters_debug:
+            print(f'current guess: {guess} letters so far: {self.guessed_letters}')
 
 
     def choose_guess(self):
@@ -107,6 +166,12 @@ class Jordle:
                 if guess[i] not in self.guessed_letters and guess[i] not in guess[:i]:
                     score += 1
             rated_guesses[score].append(guess)
+
+        if self.scored_guesses_debug:
+            for i in range(len(rated_guesses)):
+                if len(rated_guesses[i]) > 0:
+                    print(f'{i} score guesses:')
+                    print(rated_guesses[i])
 
         # TODO: Should have a check here somewhere if the guessing list is empty.
         # we'll have to select the highest 'score' word list. can do this backwards.
@@ -138,14 +203,28 @@ class Jordle:
         # on how far we are through a wordle cycle.
         sorted_frequencies = sorted(frequencies.items(), key= lambda x:x[1], reverse=True)
         
+        if self.frequency_debug:
+            for i in range(len(sorted_frequencies)):
+                # only want the first 10!
+                if i > 9:
+                    break
+                else:
+                    print(f' {i+1}. {sorted_frequencies[i][0]}: {sorted_frequencies[i][1]}')
+
         # set guess to top word.
         self.guess = sorted_frequencies[0][0]
-        
 
 
 class AnswerPool:
     def __init__(self):
         self.pool = []
+        # shows first 10 answers in pool (alphabetical, mostly useless now)
+        self.pool_snapshot = True
+        # shows counts of before/after filling answer pool, regex adjustment, answer_contains.
+        self.answer_pool_debug = True
+        # shows regex string after updating banks and answer_contains
+        self.regex_debug = False
+
         pool_file = open('5_letter_dict.txt', 'r')
         answers = pool_file.readlines()
         count = 0
@@ -155,6 +234,10 @@ class AnswerPool:
             count += 1
         
         pool_file.close()
+
+        if self.answer_pool_debug:
+            print(f'added {count} words to answer pool.')
+            print(f'first word is {self.pool[0]} and last word is {self.pool[-1]}')
     
     def update(self):
         # generate regex based off of current letter banks
@@ -171,6 +254,9 @@ class AnswerPool:
                 strings.append(result)
         
         regex = "".join(strings)
+        if self.regex_debug:
+            print(f'combined strings: {strings}')
+            print(f'regex string: {regex}')
 
         count_before = len(self.pool)
 
@@ -197,5 +283,12 @@ class AnswerPool:
 
         check_after = len(updated_list_copy)
         self.pool = updated_list_copy[:]
+
+        if self.answer_pool_debug:
+            print(f'before regex: {count_before} words after: {check_b4} words')
+            print(f'before answer_contains logic: {check_b4} words after: {check_after} words')
+
+        if self.pool_snapshot:
+            print(self.pool[:9])
 
 
