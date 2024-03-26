@@ -1,10 +1,11 @@
 import string
 import re
+from wordfreq import zipf_frequency
 
 class Jordle:
     def __init__(self, answer, guess):
         self.answer = answer.upper()
-        self.guess = guess
+        self.guess = guess.upper()
         self.letter_banks = []
         self.answer_contains = []
         self.answer_pool = AnswerPool()
@@ -17,7 +18,7 @@ class Jordle:
         for i in range(5): 
             self.letter_banks.append(list(string.ascii_uppercase))
 
-    def check_guess(self):
+    def get_results(self):
         result = [0, 0, 0, 0, 0]
         answer_mod = list(self.answer)
 
@@ -87,6 +88,61 @@ class Jordle:
                 self.guessed_letters += guess[i]
 
 
+    def choose_guess(self):
+        # check if we even need to make a new guess.
+        if self.guess == self.answer:
+            exit()
+        # Need to find the word with the highest amount of unguessed letters.
+        # general information theory says this is the fastest way to narrow the
+        # validity pool to a single answer, I think.
+
+        # store words based on how many unguessed letters they contain.
+        # index relates to the amount.
+        rated_guesses = [[],[],[],[],[],[]]
+        # separate words into groups of unguessed letters
+        highest = 0
+        for guess in self.answer_pool.pool:
+            score = 0
+            for i in range(len(guess)):
+                if guess[i] not in self.guessed_letters and guess[i] not in guess[:i]:
+                    score += 1
+            rated_guesses[score].append(guess)
+
+        # TODO: Should have a check here somewhere if the guessing list is empty.
+        # we'll have to select the highest 'score' word list. can do this backwards.
+        for i in range(len(rated_guesses)-1, -1, -1):
+            if len(rated_guesses[i]) > 0:
+                highest = i
+                break
+        
+        # Select the most frequently occuring words (ex - DEALS is more likely
+        # the wordle than, say, "DEGAS" or "DELFS", which are legitimate words, but 
+        # less likely to be on Wordle to avoid upsetting players.
+        # make a dictionary to sort all words by their frequency. will display top 10 choices
+        # TODO: if there is 1 2-score word and 20+ 1-score words, we should try to show 10 combined
+        # (2 score word, 9 1-score words). It can be misleading to only see '1' word to guess
+        # and that not end up being the answer. NOTE: need to decide how to prioritize top 10.
+        # a 0.0 frequency 3-score words gives us more info than a 4.2 frequency 2-score word, but
+        # which one is more likely to be the wordle? should it be dependent on the number of turns
+        # left (earlier turns: more info, later turns: more likely guesses)?
+        frequencies = {}
+        for i in range(len(rated_guesses[highest])):
+            freq_word = rated_guesses[highest][i]
+            freq = zipf_frequency(freq_word, 'en', wordlist='best')
+            frequencies[freq_word] = freq
+        
+        # sort frequencies by key.
+        # a list of (word, freq)s... key is tuple[0] and value is tuple[1]
+        # NOTE: could potentially do (key, value, score)? use some aggregate value * score to assign
+        # priority somewhat fairly? some deeper form of (value * score) / turn to make smarter decision based
+        # on how far we are through a wordle cycle.
+        sorted_frequencies = sorted(frequencies.items(), key= lambda x:x[1], reverse=True)
+        
+        # set guess to top word.
+        self.guess = sorted_frequencies[0][0]
+        
+
+
 class AnswerPool:
     def __init__(self):
         self.pool = []
@@ -101,6 +157,7 @@ class AnswerPool:
         pool_file.close()
     
     def update(self):
+        # generate regex based off of current letter banks
         strings = []
         for bank in self.letter_banks:
             # Don't need brackets for single letters.
