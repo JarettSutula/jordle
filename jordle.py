@@ -18,13 +18,13 @@ class Jordle:
         # shows answer at the start.
         self.guess_debug = False
         # shows the resulting 0, 1, 2 list for each guess against the answer (RECOMMENDED)
-        self.results_debug = True
+        self.results_debug = False
         # shows guessed letters so far for information theory approach.
-        self.current_letters_debug = True
+        self.current_letters_debug = False
         # shows all answers in updated pool, scored by how many new letters are in them. 0-5.
         self.scored_guesses_debug = False
         # show top 10 (sorted) options for next guess based on highest score + most frequent in English
-        self.frequency_debug = True
+        self.frequency_debug = False
         # shows first 10 answers in pool (alphabetical, mostly useless now)
         self.pool_snapshot = False
         # shows regex string after updating banks and answer_contains
@@ -274,11 +274,17 @@ class Jordle:
             print(self.answer_pool.pool[:9])
 
 
+    def output(self):
+        print(f"The Wordle Answer was {self.answer}. Jordle's guesses:")
+        for i in range(len(self.final_guesses)):
+            print(f'guess {i + 1}: {self.final_guesses[i]} - {self.final_results[i]}')
+
+
 class AnswerPool:
     def __init__(self):
         self.pool = []
         # shows counts of before/after filling answer pool, regex adjustment, answer_contains.
-        self.answer_pool_debug = True
+        self.answer_pool_debug = False
 
         pool_file = open('5_letter_dict.txt', 'r')
         answers = pool_file.readlines()

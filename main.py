@@ -19,6 +19,4 @@ while len(test_jordle.final_guesses) < 6:
 if test_jordle.final_guesses[-1] != test_jordle.answer:
     print(f"Jordle did not guess the answer correctly after {len(test_jordle.final_guesses)} guesses.")
 
-print(f"The Wordle Answer was {test_jordle.answer}. Jordle's guesses:")
-for i in range(len(test_jordle.final_guesses)):
-    print(f'guess {i + 1}: {test_jordle.final_guesses[i]} - {test_jordle.final_results[i]}')
+test_jordle.output()
