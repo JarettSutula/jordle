@@ -16,13 +16,13 @@ answers = AnswerPool()
 avg = 0
 # starting_word = "adieu"
 for i in tqdm(range(len(answers.pool))):
-    freq_word = answers.pool[i]
+    freq_word = answers.pool[i]  
     freq = zipf_frequency(freq_word, 'en', wordlist='best')
     if freq > 2.5:
         failures = 0
         for j in range(len(prev_answers)):
             answer = prev_answers[j]
-            test_jordle = Jordle(answers.pool[i], answer)
+            test_jordle = Jordle(answer, answers.pool[i])
             test_jordle.populate_banks()
             while len(test_jordle.final_guesses) < 6:
                 # get results from the last guess before checking / trying again.
@@ -53,7 +53,7 @@ for i in tqdm(range(len(answers.pool))):
 
 best_answers.sort(key=lambda tup: tup[1])
 
-with open("best_starting_guesses.txt", "w") as file:
+with open("best_starting_guesses_2.txt", "w") as file:
     for i in range(len(best_answers)):
         file.write(f'{i}. {best_answers[i][0]} {best_answers[i][1]} {best_answers[i][2]}\n')
 
