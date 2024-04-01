@@ -35,7 +35,7 @@ results_debug = True
 # shows counts of before/after filling answer pool, regex adjustment, answer_contains.
 answer_pool_debug = True
 # shows regex string after updating banks and answer_contains
-regex_debug = False
+regex_debug = True
 # shows first 10 answers in pool (alphabetical, mostly useless now)
 pool_snapshot = False
 # shows guessed letters so far for information theory approach.
@@ -45,7 +45,9 @@ summary_debug = True
 # shows all answers in updated pool, scored by how many new letters are in them. 0-5.
 scored_guesses_debug = False
 # show top 10 (sorted) options for next guess based on highest score + most frequent in English
-frequency_debug = True
+frequency_debug = False
+# show answer contains list to ensure tracking correctly.
+answer_contains_debug = True
 
 # letter banks will keep track of chars viable for each slot in the wordle. 1 for each slot.
 letter_banks = []
@@ -97,8 +99,14 @@ def update_letter_banks(banks, previous_guess, values):
             if bank_debug:
                 print(f"before correct char in slot {i}:")
                 debug_banks(i)
-            letter_banks[i] = [previous_guess[i]]
-            answer_contains.append(previous_guess[i])
+            if letter_banks[i] == [previous_guess[i]]:
+                # we already added the value in. don't re-add to answer_contains
+                pass
+            else:
+                # set that bank to the letter, and add to answer_contains
+                letter_banks[i] = [previous_guess[i]]
+                if previous_guess[i] not in answer_contains:
+                    answer_contains.append(previous_guess[i])
             if bank_debug:
                 print(f"after correct char in slot {i}:")
                 debug_banks(-1)
@@ -109,15 +117,23 @@ def update_letter_banks(banks, previous_guess, values):
     # if it's a 1, remove letter from current slot bank.
     for i in range(len(values)):
         if values[i] == 1:
-            if previous_guess[i] in letter_banks[i]:
-                letter_banks[i].remove(previous_guess[i])
+            letter = previous_guess[i]
+            if letter in letter_banks[i]:
+                letter_banks[i].remove(letter)
+                # we should only add this to answer_contains if we are guessing
+                # more than we know exists in answers_contains.
+                # otherwise, if 'E' exists once at pos 0, and we guess two different
+                # words with 'E's at pos 1 and pos 2, answer_contains tells us we have
+                # at least two 'E's in the final result which may not be true.
+                if previous_guess.count(letter) > answer_contains.count(letter):
+                    answer_contains.append(letter)
             else:
-                print(f'cannot remove {previous_guess[i]} from letter bank {i}')
+                print(f'cannot remove {letter} from letter bank {i}')
 
-            if previous_guess[i] not in answer_contains:
-                answer_contains.append(previous_guess[i])
+            # if previous_guess[i] not in answer_contains:
+            #     answer_contains.append(previous_guess[i])
             if bank_debug: 
-                print(f"removing letter '{previous_guess[i]}' from bank {i}")
+                print(f"removing letter '{letter}' from bank {i}")
                 debug_banks(i)
 
     # if it's a 0, remove letter from all letter banks...
@@ -154,6 +170,8 @@ def update_letter_banks(banks, previous_guess, values):
                                 print(f'removing {previous_guess[i]} from letter bank {j} code=003')
                                 debug_banks(j)
 
+    if answer_contains_debug:
+        print(f'Answer contains: {answer_contains}')
 
 def update_answer_pool():
     global answer_pool
@@ -173,6 +191,8 @@ def update_answer_pool():
     updated_list_copy = updated_list[:]
     for guess in updated_list:
         remove = False
+        #TODO Need to make sure guesses contain ALL elements of answer_contains
+        # previously not considering duplicates. Changed but needs check.
         for letter in answer_contains:
             # print(letter, guess, remove)
             if letter not in guess:
@@ -188,7 +208,7 @@ def update_answer_pool():
         print(f'before answer_contains logic: {check_b4} words after: {check_after} words')
 
     if pool_snapshot:
-        print(answer_pool[:9])
+        print(answer_pool[:15])
     
 
 def update_guessed_letters(guess, guessed_letters):
@@ -329,7 +349,7 @@ def wordle_loop():
     # in future, this will be the result of the API.
     if mode == "j":
         # answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
-        answer = "EMBER"
+        answer = "WHERE"
     guessing = True
     guesses = 0
     result = False

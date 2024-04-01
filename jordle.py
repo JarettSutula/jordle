@@ -1,9 +1,29 @@
+"""
+This file contains class modules for both a wordle-guessing bot
+and a dynamic answer pool that pulls from a list of 5-letter words
+from the Scrabble dictionary.
+"""
 import string
 import re
 from wordfreq import zipf_frequency
 
 class Jordle:
+    """
+    A Jordle object takes in the current Wordle answer and a starting 
+    word guess. It contains various methods to update letter banks, 
+    make a guess based on analysis, check results, update answer pools,
+    and display results.
+    """
     def __init__(self, answer, guess):
+        """
+        A Jordle is given an answer and a starting guess. Letter banks
+        are stored here and answer pools are of the AnswerPool class.
+        As each guess and corresponding result is generated, they are
+        stored for future display and eventual DB implementation.
+
+        :param answer: A string of the current Wordle answer from API
+        :param guess: A string of the opening 5-letter word guess.
+        """
         self.answer = answer.upper()
         self.guess = guess.upper()
         self.letter_banks = []
@@ -33,19 +53,30 @@ class Jordle:
         self.answer_pool_debug = False
 
     def populate_banks(self):
+        """Fills each letter bank with every letter of the alphabet."""
         for i in range(5): 
             self.letter_banks.append(list(string.ascii_uppercase))
 
     def get_results(self):
+        """Compares a guess to the answer and return a resulting list
+        of 0s, 1s, and 2s. 0s represent letters that do not appear
+        at all (or, if a letter is guessed twice in the same word
+        but it only appears once), 1s represent letters that exist in
+        the word but are not in the correct position, and 2s represent
+        letters that exist in the word are in the correct position.
+        """
         result = [0, 0, 0, 0, 0]
         answer_mod = list(self.answer)
 
+        # Priority has to be 2s > 1s> 0s
+        # 2s can override everything since same letter guesses will stay 0s.
         for i in range(len(self.answer)):
             char = self.guess[i]
             if self.answer[i] == char:
                 result[i] = 2
                 answer_mod[i] = "-"
 
+        # 
         for i in range(len(self.answer)):
             char = self.guess[i]
             if char in answer_mod and result[i] != 2:
