@@ -37,7 +37,7 @@ answer_pool_debug = True
 # shows regex string after updating banks and answer_contains
 regex_debug = True
 # shows first 10 answers in pool (alphabetical, mostly useless now)
-pool_snapshot = True
+pool_snapshot = False
 # shows guessed letters so far for information theory approach.
 current_letters_debug = False
 # at the end, shows all guesses and their resulting [0,1,2] lists.
@@ -45,7 +45,7 @@ summary_debug = True
 # shows all answers in updated pool, scored by how many new letters are in them. 0-5.
 scored_guesses_debug = False
 # show top 10 (sorted) options for next guess based on highest score + most frequent in English
-frequency_debug = False
+frequency_debug = True
 # show answer contains list to ensure tracking correctly.
 answer_contains_debug = True
 
@@ -361,7 +361,7 @@ def wordle_loop():
     # in future, this will be the result of the API.
     if mode == "j":
         # answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
-        answer = "TABOO"
+        answer = "EMBER"
     guessing = True
     guesses = 0
     result = False

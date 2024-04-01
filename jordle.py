@@ -76,7 +76,6 @@ class Jordle:
                 result[i] = 2
                 answer_mod[i] = "-"
 
-        # 
         for i in range(len(self.answer)):
             char = self.guess[i]
             if char in answer_mod and result[i] != 2:
@@ -110,13 +109,20 @@ class Jordle:
 
         previous_guess = self.final_guesses[-1]
         previous_guess_result = self.final_results[-1]
+
         for i in range(len(previous_guess_result)):
             if previous_guess_result[i] == 2:
                 if self.bank_debug:
                     print(f"before correct char in slot {i}:")
                     self.debug_banks(i)
-                self.letter_banks[i] = [previous_guess[i]]
-                self.answer_contains.append(previous_guess[i])
+                if self.letter_banks[i] == [previous_guess[i]]:
+                    # we already added the value in. don't re-add to answer_contains
+                    pass
+                else:
+                    # set that bank to the letter, and add to answer_contains
+                    self.letter_banks[i] = [previous_guess[i]]
+                    if previous_guess[i] not in self.answer_contains:
+                        self.answer_contains.append(previous_guess[i])
                 if self.bank_debug:
                     print(f"after correct char in slot {i}:")
                     self.debug_banks(-1)
@@ -127,13 +133,19 @@ class Jordle:
         # if it's a 1, remove letter from current slot bank.
         for i in range(len(previous_guess_result)):
             if previous_guess_result[i] == 1:
+                letter = previous_guess[i]
                 if previous_guess[i] in self.letter_banks[i]:
-                    self.letter_banks[i].remove(previous_guess[i])
+                    self.letter_banks[i].remove(letter)
+                    # we should only add this to answer_contains if we are guessing
+                    # more than we know exists in answers_contains.
+                    # otherwise, if 'E' exists once at pos 0, and we guess two different
+                    # words with 'E's at pos 1 and pos 2, answer_contains tells us we have
+                    # at least two 'E's in the final result which may not be true.
+                    if previous_guess.count(letter) > self.answer_contains.count(letter):
+                        self.answer_contains.append(letter)
                 else:
                     print(f'cannot remove {previous_guess[i]} from letter bank {i}')
 
-                if previous_guess[i] not in self.answer_contains:
-                    self.answer_contains.append(previous_guess[i])
                 if self.bank_debug: 
                     print(f"removing letter '{previous_guess[i]}' from bank {i}")
                     self.debug_banks(i)
@@ -186,7 +198,6 @@ class Jordle:
         # check if we even need to make a new guess.
         if self.guess == self.answer:
             # add final guess and result to lists.
-            print("yippee!")
             exit()
         # Need to find the word with the highest amount of unguessed letters.
         # general information theory says this is the fastest way to narrow the
@@ -253,8 +264,20 @@ class Jordle:
 
 
     def update_answer_pool(self):
-        # generate regex based off of current letter banks
+        accounted_for = []
         strings = []
+        # add (?=.*x) lookup for character x in answer_contains.
+        # removes need for old answer_contains checking that was
+        # a band-aid fix and missed certain information.
+        for i in range(len(self.answer_contains)):
+            if self.answer_contains[i] not in accounted_for:
+                lookup = "(?="
+                accounted_for.append(self.answer_contains[i])
+                for j in range(self.answer_contains.count(self.answer_contains[i])):
+                    lookup += f'.*{self.answer_contains[i]}'
+                lookup += ")"
+                strings.append(lookup)
+
         for bank in self.letter_banks:
             # Don't need brackets for single letters.
             if len(bank) == 1:
@@ -276,30 +299,13 @@ class Jordle:
         r = re.compile(regex)
         # filter out all options that don't match regex pattern.
         updated_list = list(filter(r.match, self.answer_pool.pool))
-        # regex does not take into account the letters that exist in the word
-        # but not in the correct spots. Correct regex string for that, the way
-        # this has been implemented, would be a nightmare to write.
-        # instead we will just remove any words from updated_list that do not contain
-        # the letters from 'answer_contains'. Testing ensues. 
-        check_b4 = len(updated_list)
-        # separate list to ensure the loop does not get thrown by mid-iteration removal.
-        updated_list_copy = updated_list[:]
-        for guess in updated_list:
-            remove = False
-            for letter in self.answer_contains:
-                # print(letter, guess, remove)
-                if letter not in guess:
-                    remove = True
-            if remove:
-                # print(f'removed {guess}')
-                updated_list_copy.remove(guess)
+        
 
-        check_after = len(updated_list_copy)
-        self.answer_pool.pool = updated_list_copy[:]
+        check_after = len(updated_list)
+        self.answer_pool.pool = updated_list[:]
 
         if self.answer_pool_debug:
-            print(f'before regex: {count_before} words after: {check_b4} words')
-            print(f'before answer_contains logic: {check_b4} words after: {check_after} words')
+            print(f'before regex: {count_before} words after: {check_after} words')
 
         if self.pool_snapshot:
             print(self.answer_pool.pool[:9])
