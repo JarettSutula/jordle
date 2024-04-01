@@ -1,6 +1,6 @@
 from jordle import Jordle
 
-test_jordle = Jordle("ember", "arise")
+test_jordle = Jordle("taboo", "boots")
 test_jordle.populate_banks()
 while len(test_jordle.final_guesses) < 6:
     # get results from the last guess before checking / trying again.

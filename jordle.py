@@ -1,7 +1,21 @@
 """
+Author: Jarett Sutula
+Version: 1.00
 This file contains class modules for both a wordle-guessing bot
 and a dynamic answer pool that pulls from a list of 5-letter words
 from the Scrabble dictionary.
+
+TODO: Implement a website / DB connection that can grab the daily
+Jordle run from my Pi.
+
+TODO: Make smarter guesses by considering more than just highest
+scoring list of guesses. An equation might find a usage for
+score and frequency to eliminate single element lists with
+infrequent/unrealistic answers for a Wordle.
+
+V1.01 performance for "crane":
+{'1': 1, '2': 79, '3': 320, '4': 355, '5': 165, '6': 65, 'X': 29}
+AVG: 3.902
 """
 import string
 import re
@@ -48,9 +62,9 @@ class Jordle:
         # shows first 10 answers in pool (alphabetical, mostly useless now)
         self.pool_snapshot = False
         # shows regex string after updating banks and answer_contains
-        self.regex_debug = False
+        self.regex_debug = True
         # shows counts of before/after filling answer pool, regex adjustment, answer_contains.
-        self.answer_pool_debug = False
+        self.answer_pool_debug = True
 
     def populate_banks(self):
         """Fills each letter bank with every letter of the alphabet."""
@@ -93,6 +107,9 @@ class Jordle:
 
 
     def debug_banks(self, i):
+        """Prints out a letter bank from position i.
+        :param i: An integer that denotes the index of a letter bank.
+        """
         if i == -1:
             for bank in self.letter_banks:
                 print(bank)
@@ -103,6 +120,7 @@ class Jordle:
 
 
     def update_letter_banks(self):
+        """Updates the jordle's letter banks based on current guess."""
         if self.bank_debug:
             two_count = self.final_results[-1].count(2)
             print(f'\nGoing through correct values: should be {two_count}.')
@@ -184,7 +202,9 @@ class Jordle:
                                     print(f'removing {previous_guess[i]} from letter bank {j} code=003')
                                     self.debug_banks(j)
 
+
     def update_guessed_letters(self):
+        """Updates the guessed_letters variable from recent guess."""
         guess = self.final_guesses[-1]
         for i in range(len(guess)):
             if guess[i] not in self.guessed_letters:
@@ -195,6 +215,12 @@ class Jordle:
 
 
     def choose_guess(self):
+        """Chooses a guess for the next turn based on the new answer pool.
+        Prioritizes higher 'score' guesses - those that put new letters in
+        to the pool of guessed letters. The highest scored guesses get
+        sorted by their frequency in the english language to higher emulate
+        a real wordle guess, which are more common words.
+        """
         # check if we even need to make a new guess.
         if self.guess == self.answer:
             # add final guess and result to lists.
@@ -264,6 +290,10 @@ class Jordle:
 
 
     def update_answer_pool(self):
+        """Using Regex, sifts out the answers in the answer pool
+        that don't match the pattern given from updated letter banks
+        and known letters in the answer so far.
+        """
         accounted_for = []
         strings = []
         # add (?=.*x) lookup for character x in answer_contains.
@@ -312,13 +342,20 @@ class Jordle:
 
 
     def output(self):
+        """Prints all guesses Jordle made and their corresponding results."""
         print(f"The Wordle Answer was {self.answer}. Jordle's guesses:")
         for i in range(len(self.final_guesses)):
             print(f'guess {i + 1}: {self.final_guesses[i]} - {self.final_results[i]}')
 
 
 class AnswerPool:
+    """
+    An AnswerPool object exists with a list of every 5 letter possible answer
+    in the Scrabble dictionary. It gets updated through update_answer_pool() 
+    from the Jordle class.
+    """
     def __init__(self):
+        """Fills the pool with the 5-letter Scrabble dictionary words."""
         self.pool = []
         # shows counts of before/after filling answer pool, regex adjustment, answer_contains.
         self.answer_pool_debug = False
