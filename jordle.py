@@ -1,6 +1,6 @@
 """
 Author: Jarett Sutula
-Version: 1.00
+Version: 1.01
 This file contains class modules for both a wordle-guessing bot
 and a dynamic answer pool that pulls from a list of 5-letter words
 from the Scrabble dictionary.
@@ -62,9 +62,9 @@ class Jordle:
         # shows first 10 answers in pool (alphabetical, mostly useless now)
         self.pool_snapshot = False
         # shows regex string after updating banks and answer_contains
-        self.regex_debug = True
+        self.regex_debug = False
         # shows counts of before/after filling answer pool, regex adjustment, answer_contains.
-        self.answer_pool_debug = True
+        self.answer_pool_debug = False
 
     def populate_banks(self):
         """Fills each letter bank with every letter of the alphabet."""
@@ -160,7 +160,13 @@ class Jordle:
                     # words with 'E's at pos 1 and pos 2, answer_contains tells us we have
                     # at least two 'E's in the final result which may not be true.
                     if previous_guess.count(letter) > self.answer_contains.count(letter):
-                        self.answer_contains.append(letter)
+                        count_misplaced = 0
+                        for j in range(len(previous_guess_result)):
+                            if previous_guess[j] == letter and previous_guess_result[j] == 1:
+                                count_misplaced += 1
+                        if count_misplaced > self.answer_contains.count(letter):
+                            for k in range(count_misplaced - self.answer_contains.count(letter)):
+                                self.answer_contains.append(letter)
                 else:
                     print(f'cannot remove {previous_guess[i]} from letter bank {i}')
 
@@ -286,6 +292,7 @@ class Jordle:
                     print(f' {i+1}. {sorted_frequencies[i][0]}: {sorted_frequencies[i][1]}')
 
         # set guess to top word.
+
         self.guess = sorted_frequencies[0][0]
 
 

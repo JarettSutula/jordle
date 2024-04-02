@@ -125,8 +125,20 @@ def update_letter_banks(banks, previous_guess, values):
                 # otherwise, if 'E' exists once at pos 0, and we guess two different
                 # words with 'E's at pos 1 and pos 2, answer_contains tells us we have
                 # at least two 'E's in the final result which may not be true.
+                #NOTE: have to make sure that VICHY > CIRCA for MIMIC does not give
+                # two C's in append. If the count > contains, we need to make sure the
+                # amount of 1's in results are from the same letter.
                 if previous_guess.count(letter) > answer_contains.count(letter):
-                    answer_contains.append(letter)
+                    indices_misplaced = 0
+                    for j in range(len(previous_guess)):
+                        if previous_guess[j] == letter and values[j] == 1:
+                            indices_misplaced += 1
+                    print(f'indices = {indices_misplaced}, count in AC = {answer_contains.count(letter)}')
+                    if indices_misplaced > answer_contains.count(letter):
+                        # if there are more 1s for the letter than there are in answer_contains
+                        # add the difference (in most cases 1, in rare cases 2)
+                        for k in range(indices_misplaced - answer_contains.count(letter)):
+                            answer_contains.append(letter)
             else:
                 print(f'cannot remove {letter} from letter bank {i}')
 
@@ -361,7 +373,7 @@ def wordle_loop():
     # in future, this will be the result of the API.
     if mode == "j":
         # answer = answer_pool[random.randint(0, len(answer_pool) - 1)]
-        answer = "EMBER"
+        answer = "AGING"
     guessing = True
     guesses = 0
     result = False

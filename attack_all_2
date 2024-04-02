@@ -1,0 +1,69 @@
+from jordle import Jordle, AnswerPool
+from tqdm import tqdm
+import matplotlib.pyplot as plt
+import multiprocessing
+from wordfreq import zipf_frequency
+
+prev_answers = []
+with open('previous_wordle_answers.txt', 'r') as file:
+    line = file.readline()
+    prev_answers = line.split()
+
+best_answers = []
+answers = AnswerPool()
+
+# scores = {'1': 0, '2': 0, '3': 0, '4':0, '5':0, '6':0, 'X':0}
+avg = 0
+# starting_word = "adieu"
+for i in tqdm(range(len(answers.pool))):
+    freq_word = answers.pool[i]
+    freq = zipf_frequency(freq_word, 'en', wordlist='best')
+    if freq > 2.5:
+        failures = 0
+        answer = answers.pool[i]
+        for j in range(len(prev_answers)):
+            test_jordle = Jordle(prev_answers[j], answer)
+            test_jordle.populate_banks()
+            while len(test_jordle.final_guesses) < 6:
+                # get results from the last guess before checking / trying again.
+                test_jordle.get_results()
+
+                if test_jordle.answer == test_jordle.guess:
+                    # print(f"Jordle found the answer after {len(test_jordle.final_guesses)} guesses.")
+                    # scores[str(len(test_jordle.final_guesses))] += 1
+                    avg += len(test_jordle.final_guesses)
+                    break
+
+                else:
+                    test_jordle.update_letter_banks()
+                    test_jordle.update_answer_pool()
+                    test_jordle.update_guessed_letters()
+                    test_jordle.choose_guess()
+
+            if test_jordle.final_guesses[-1] != test_jordle.answer:
+                failures += 1
+                # scores['X'] += 1
+                avg += 7 
+                # print(f"Jordle did not guess the answer correctly after {len(test_jordle.final_guesses)} guesses.")
+
+            # test_jordle.output()
+        avg /= len(prev_answers)
+        avg = round(avg, 3)
+        best_answers.append((answers.pool[i], avg, failures))
+
+best_answers.sort(key=lambda tup: tup[1])
+
+with open("best_starting_guesses_2.txt", "w") as file:
+    for i in range(len(best_answers)):
+        file.write(f'{i}. {best_answers[i][0]} {best_answers[i][1]} {best_answers[i][2]}\n')
+
+# print(scores)
+# print(avg)
+# score = list(scores.keys())
+# values = list(scores.values())
+# plt.bar(range(len(score)), values, tick_label=score)
+# plt.ylabel('Number of words')
+# plt.title("""Performance of Jordle starting with word '""" + starting_word +"""'""")
+# plt.xlabel('Number of Guesses')
+# plt.show() 
+        

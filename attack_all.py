@@ -1,3 +1,8 @@
+"""
+Given a starting word, return how it does vs the 1000+ previous
+Wordle answers.
+"""
+
 from jordle import Jordle, AnswerPool
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -10,10 +15,18 @@ with open('previous_wordle_answers.txt', 'r') as file:
 
 # best_answers = []
 answers = AnswerPool()
-
+failures = []
 scores = {'1': 0, '2': 0, '3': 0, '4':0, '5':0, '6':0, 'X':0}
 avg = 0
-starting_word = "crane"
+starting_word = "slant"
+# slant outcomes v1.01
+# {'1': 0, '2': 72, '3': 331, '4': 389, '5': 153, '6': 42, 'X': 27}
+# 3.845
+# ['ABATE', 'AGING', 'CATCH', 'CLASS', 'COWER', 'CRASS', 'DANDY', 'FOLLY', 
+#  'GULLY', 'HATCH', 'HOUND', 'LABEL', 'LAPEL', 'MERRY', 'PAPER', 'PARER', 
+#  'PARRY', 'RIPER', 'RUDER', 'SEVER', 'STASH', 'STATE', 'SWILL', 'TAUNT', 
+#  'TRAIT', 'TRICE', 'TRITE']
+
 for i in tqdm(range(len(prev_answers))):
     # freq_word = answers.pool[i]  
     # freq = zipf_frequency(freq_word, 'en', wordlist='best')
@@ -40,7 +53,7 @@ for i in tqdm(range(len(prev_answers))):
             test_jordle.choose_guess()
 
     if test_jordle.final_guesses[-1] != test_jordle.answer:
-        # failures += 1
+        failures.append(test_jordle.answer)
         scores['X'] += 1
         avg += 7 
         # print(f"Jordle did not guess the answer correctly after {len(test_jordle.final_guesses)} guesses.")
@@ -58,6 +71,7 @@ avg = round(avg, 3)
 
 print(scores)
 print(avg)
+print(failures)
 score = list(scores.keys())
 values = list(scores.values())
 plt.bar(range(len(score)), values, tick_label=score)
