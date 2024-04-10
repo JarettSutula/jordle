@@ -1,6 +1,6 @@
 from jordle import Jordle
 
-test_jordle = Jordle("taboo", "boots")
+test_jordle = Jordle("crane", "aging")
 test_jordle.populate_banks()
 while len(test_jordle.final_guesses) < 6:
     # get results from the last guess before checking / trying again.
@@ -14,7 +14,7 @@ while len(test_jordle.final_guesses) < 6:
         test_jordle.update_letter_banks()
         test_jordle.update_answer_pool()
         test_jordle.update_guessed_letters()
-        test_jordle.choose_guess()
+        test_jordle.choose_guess_v2()
 
 if test_jordle.final_guesses[-1] != test_jordle.answer:
     print(f"Jordle did not guess the answer correctly after {len(test_jordle.final_guesses)} guesses.")

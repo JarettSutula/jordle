@@ -18,14 +18,23 @@ answers = AnswerPool()
 failures = []
 scores = {'1': 0, '2': 0, '3': 0, '4':0, '5':0, '6':0, 'X':0}
 avg = 0
-starting_word = "slant"
-# slant outcomes v1.01
-# {'1': 0, '2': 72, '3': 331, '4': 389, '5': 153, '6': 42, 'X': 27}
-# 3.845
-# ['ABATE', 'AGING', 'CATCH', 'CLASS', 'COWER', 'CRASS', 'DANDY', 'FOLLY', 
-#  'GULLY', 'HATCH', 'HOUND', 'LABEL', 'LAPEL', 'MERRY', 'PAPER', 'PARER', 
-#  'PARRY', 'RIPER', 'RUDER', 'SEVER', 'STASH', 'STATE', 'SWILL', 'TAUNT', 
-#  'TRAIT', 'TRICE', 'TRITE']
+starting_word = "crane"
+# crane outcomes v1.01
+# {'1': 1, '2': 79, '3': 320, '4': 355, '5': 165, '6': 65, 'X': 29}
+# 3.902
+# ['AGING', 'ARDOR', 'DANDY', 'FERRY', 'FOLLY', 'FOYER', 'GONER', 'HATCH', 
+#  'HUNCH', 'LATTE', 'MARRY', 'MASSE', 'MERRY', 'NATAL', 'PAPER', 'PARER', 
+#  'PIPER', 'REVEL', 'RIPER', 'RUDER', 'SASSY', 'SENSE', 'SEVER', 'SOWER', 
+#  'STATE', 'SURER', 'TASTE', 'TASTY', 'TAUNT']
+# crane outcomes v1.02 (man we got worse :c)
+# {'1': 1, '2': 84, '3': 325, '4': 332, '5': 164, '6': 67, 'X': 41}
+# 3.926
+# ['ABATE', 'BOOBY', 'BOOZY', 'COCOA', 'COWER', 'DANDY', 'FERRY', 'FINER', 
+#  'FOLLY', 'FOYER', 'FROZE', 'GAMER', 'GONER', 'HATCH', 'HATER', 'HUNCH', 
+#  'HUTCH', 'INFER', 'JAUNT', 'KAZOO', 'LATTE', 'LEDGE', 'MASSE', 'MERRY', 
+#  'PARER', 'PIPER', 'REVEL', 'RIPER', 'RUDER', 'SASSY', 'SEVER', 'SMITE', 
+#  'SOWER', 'STASH', 'STEED', 'SURER', 'TASTE', 'TASTY', 'TAUNT', 'VERGE', 
+#  'VERVE']
 
 for i in tqdm(range(len(prev_answers))):
     # freq_word = answers.pool[i]  
@@ -50,7 +59,7 @@ for i in tqdm(range(len(prev_answers))):
             test_jordle.update_letter_banks()
             test_jordle.update_answer_pool()
             test_jordle.update_guessed_letters()
-            test_jordle.choose_guess()
+            test_jordle.choose_guess_v2()
 
     if test_jordle.final_guesses[-1] != test_jordle.answer:
         failures.append(test_jordle.answer)

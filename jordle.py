@@ -16,6 +16,9 @@ infrequent/unrealistic answers for a Wordle.
 V1.01 performance for "crane":
 {'1': 1, '2': 79, '3': 320, '4': 355, '5': 165, '6': 65, 'X': 29}
 AVG: 3.902
+V1.02 performance for "crane":
+{'1': 1, '2': 84, '3': 325, '4': 332, '5': 164, '6': 67, 'X': 41}
+AVG: 3.926
 """
 import string
 import re
@@ -235,6 +238,7 @@ class Jordle:
         # general information theory says this is the fastest way to narrow the
         # validity pool to a single answer, I think.
 
+        # V1.00 approach -------------------------------------------------------------
         # store words based on how many unguessed letters they contain.
         # index relates to the amount.
         rated_guesses = [[],[],[],[],[],[]]
@@ -294,6 +298,45 @@ class Jordle:
         # set guess to top word.
 
         self.guess = sorted_frequencies[0][0]
+
+    
+    def choose_guess_v2(self):
+        """Chooses a guess for the next turn using a combination of score and frequency."""
+        # check if we even need to make a new guess.
+        if self.guess == self.answer:
+            # add final guess and result to lists.
+            exit()
+        # Need to find the word with the highest amount of unguessed letters.
+        # general information theory says this is the fastest way to narrow the
+        # validity pool to a single answer, I think.
+
+        # V1.01 approach -------------------------------------------------------------
+        # score words based on how many unguessed letters they contain
+        rated_guesses = []
+
+        for guess in self.answer_pool.pool:
+            score = 0
+            for i in range(len(guess)):
+                if guess[i] not in self.guessed_letters and guess[i] not in guess[:i]:
+                    score += 1
+            freq = zipf_frequency(guess, 'en', wordlist='best')
+            # calculate a total score to make guesses off of.
+            turn = len(self.final_guesses)
+            total_score = ((score * turn) + (freq * (freq - turn))) / 30
+            rated_guesses.append((guess, score, freq, total_score))
+
+        rated_guesses.sort(key = lambda tup: tup[3], reverse=True)
+        
+        if self.scored_guesses_debug:
+            print(f'Word   Score  Frequency  Total Score')
+            print("-------------------------------------")
+            for i in range(len(rated_guesses)):
+                if i < 20:
+                    g = rated_guesses[i]
+                    print(f'{g[0]}:   {g[1]}     {g[2]:.3f}       {g[3]:.3f}')
+
+        # set guess to top word.
+        self.guess = rated_guesses[0][0]
 
 
     def update_answer_pool(self):
